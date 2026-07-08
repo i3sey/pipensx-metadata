@@ -1,0 +1,76 @@
+name: Build metadata index
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: metadata-index
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test generator
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Resolve source revisions
+        id: sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          langegen="$(git ls-remote https://github.com/Langegen/switch-games.git refs/heads/main | cut -f1)"
+          titledb="$(git ls-remote https://github.com/blawar/titledb.git refs/heads/master | cut -f1)"
+          curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/manifest.json \
+            -o /tmp/previous-manifest.json || true
+          changed=true
+          if [[ -s /tmp/previous-manifest.json ]] && \
+             [[ "$(jq -r .langegenCommit /tmp/previous-manifest.json)" == "$langegen" ]] && \
+             [[ "$(jq -r .titledbCommit /tmp/previous-manifest.json)" == "$titledb" ]]; then
+            changed=false
+          fi
+          echo "langegen=$langegen" >> "$GITHUB_OUTPUT"
+          echo "titledb=$titledb" >> "$GITHUB_OUTPUT"
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          echo "tag=metadata-${langegen:0:12}-${titledb:0:12}" >> "$GITHUB_OUTPUT"
+
+      - name: Build verified index
+        if: steps.sources.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          previous=()
+          if [[ -s /tmp/previous-manifest.json ]]; then
+            previous=(--previous-manifest /tmp/previous-manifest.json)
+          fi
+          python3 build_index.py \
+            --langegen https://raw.githubusercontent.com/Langegen/switch-games/${{ steps.sources.outputs.langegen }}/switch_games.json \
+            --titledb https://raw.githubusercontent.com/blawar/titledb/${{ steps.sources.outputs.titledb }}/US.en.json \
+            --langegen-commit "${{ steps.sources.outputs.langegen }}" \
+            --titledb-commit "${{ steps.sources.outputs.titledb }}" \
+            --index-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${{ steps.sources.outputs.tag }}/game_metadata_index.json" \
+            --output output \
+            "${previous[@]}"
+
+      - name: Publish immutable release
+        if: steps.sources.outputs.changed == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "${{ steps.sources.outputs.tag }}" \
+            output/game_metadata_index.json \
+            output/manifest.json \
+            output/match-report.json \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "Metadata ${{ steps.sources.outputs.tag }}" \
+            --notes "Langegen ${{ steps.sources.outputs.langegen }}; titledb ${{ steps.sources.outputs.titledb }}" \
+            --latest
