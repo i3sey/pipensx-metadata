@@ -9,11 +9,15 @@ either changes, it publishes an immutable GitHub Release containing:
 
 - `game_metadata_index.json` — records keyed by Langegen info-hash;
 - `manifest.json` — schema version, source revisions, byte count and SHA-256;
-- `match-report.json` — coverage, methods, ambiguous and unmatched releases.
+- `match-report.json` — coverage, methods, ambiguous and unmatched releases;
+- `filelists.json` — cached RuTracker file lists keyed by `topic_id` and
+  info-hash.
 
-Matching is deliberately conservative: topic overrides, embedded base Title
-ID, exact normalized title, then deterministic DLC/multipack transforms.
-General fuzzy matches are never published automatically.
+Matching is deliberately conservative: topic overrides, Title IDs extracted
+from RuTracker file names, then embedded base Title IDs in the release text.
+If a file list contains multiple base Title IDs, the largest parsed file set
+wins; equal or unknown sizes stay ambiguous. Name matches are reported as
+suggestions only and are never published automatically.
 
 ## Local build
 
@@ -24,7 +28,15 @@ python3 build_index.py \
   --titledb https://raw.githubusercontent.com/blawar/titledb/master/US.en.json \
   --langegen-commit local \
   --titledb-commit local \
+  --previous-filelists output/filelists.json \
   --output output
+```
+
+Live file-list fetching requires an authenticated RuTracker cookie:
+
+```bash
+export RUTRACKER_COOKIE='bb_session=...; bb_data=...'
+python3 build_index.py ... --require-filelists
 ```
 
 Manual corrections belong in `overrides.json` as `topic_id` to 16-character

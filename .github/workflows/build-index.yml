@@ -30,8 +30,11 @@ jobs:
           titledb="$(git ls-remote https://github.com/blawar/titledb.git refs/heads/master | cut -f1)"
           curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/manifest.json \
             -o /tmp/previous-manifest.json || true
+          curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/filelists.json \
+            -o /tmp/previous-filelists.json || true
           changed=true
           if [[ -s /tmp/previous-manifest.json ]] && \
+             [[ -s /tmp/previous-filelists.json ]] && \
              [[ "$(jq -r .langegenCommit /tmp/previous-manifest.json)" == "$langegen" ]] && \
              [[ "$(jq -r .titledbCommit /tmp/previous-manifest.json)" == "$titledb" ]]; then
             changed=false
@@ -44,11 +47,17 @@ jobs:
       - name: Build verified index
         if: steps.sources.outputs.changed == 'true'
         shell: bash
+        env:
+          RUTRACKER_COOKIE: ${{ secrets.RUTRACKER_COOKIE }}
         run: |
           set -euo pipefail
           previous=()
           if [[ -s /tmp/previous-manifest.json ]]; then
             previous=(--previous-manifest /tmp/previous-manifest.json)
+          fi
+          filelists=()
+          if [[ -s /tmp/previous-filelists.json ]]; then
+            filelists=(--previous-filelists /tmp/previous-filelists.json)
           fi
           python3 build_index.py \
             --langegen https://raw.githubusercontent.com/Langegen/switch-games/${{ steps.sources.outputs.langegen }}/switch_games.json \
@@ -57,7 +66,9 @@ jobs:
             --titledb-commit "${{ steps.sources.outputs.titledb }}" \
             --index-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${{ steps.sources.outputs.tag }}/game_metadata_index.json" \
             --output output \
-            "${previous[@]}"
+            --require-filelists \
+            "${previous[@]}" \
+            "${filelists[@]}"
 
       - name: Publish immutable release
         if: steps.sources.outputs.changed == 'true'
@@ -70,6 +81,7 @@ jobs:
             output/game_metadata_index.json \
             output/manifest.json \
             output/match-report.json \
+            output/filelists.json \
             --repo "$GITHUB_REPOSITORY" \
             --title "Metadata ${{ steps.sources.outputs.tag }}" \
             --notes "Langegen ${{ steps.sources.outputs.langegen }}; titledb ${{ steps.sources.outputs.titledb }}" \
