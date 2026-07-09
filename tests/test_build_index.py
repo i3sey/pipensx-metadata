@@ -211,6 +211,40 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(entries, [])
         self.assertEqual(report["fileTitleIdMatches"], 0)
 
+    def test_refresh_filelist_cache_respects_fetch_limit(self):
+        langegen = [
+            game("One [NSZ]", "6", 201),
+            game("Two [NSZ]", "7", 202),
+            game("Three [NSZ]", "8", 203),
+        ]
+        calls = []
+        original = build_index.fetch_topic_filelist
+
+        def fake_fetch(topic_id, cookie, timeout_seconds=60.0):
+            calls.append((topic_id, cookie, timeout_seconds))
+            return [{"path": f"Game [010000000000{topic_id[-1]}000].nsp", "size": 1}]
+
+        try:
+            build_index.fetch_topic_filelist = fake_fetch
+            cache, stats = build_index.refresh_filelist_cache(
+                langegen,
+                {"schemaVersion": 1, "entries": {}},
+                cookie="cookie",
+                delay_seconds=0,
+                fetch_limit=2,
+                timeout_seconds=7,
+                progress_interval=0,
+            )
+        finally:
+            build_index.fetch_topic_filelist = original
+
+        self.assertEqual([call[0] for call in calls], ["201", "202"])
+        self.assertEqual(calls[0][2], 7)
+        self.assertEqual(stats["fileListFetched"], 2)
+        self.assertEqual(stats["fileListMissing"], 1)
+        self.assertTrue(stats["fileListFetchLimitReached"])
+        self.assertEqual(len(cache["entries"]), 2)
+
     def test_unmatched_rows_get_non_publishing_fuzzy_suggestions(self):
         langegen = [game("Alfa Gaem [NSZ]", "3", 102)]
         titledb = {

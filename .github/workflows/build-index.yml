@@ -37,16 +37,25 @@ jobs:
             -o /tmp/previous-manifest.json || true
           curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/filelists.json \
             -o /tmp/previous-filelists.json || true
+          needs_filelists=false
+          if [[ ! -s /tmp/previous-filelists.json ]]; then
+            needs_filelists=true
+          elif [[ -s /tmp/previous-manifest.json ]] && \
+               [[ "$(jq -r '.stats.fileListMissing // 0' /tmp/previous-manifest.json)" != "0" ]]; then
+            needs_filelists=true
+          fi
           changed=true
           if [[ -s /tmp/previous-manifest.json ]] && \
              [[ -s /tmp/previous-filelists.json ]] && \
              [[ "$(jq -r .langegenCommit /tmp/previous-manifest.json)" == "$langegen" ]] && \
-             [[ "$(jq -r .titledbCommit /tmp/previous-manifest.json)" == "$titledb" ]]; then
+             [[ "$(jq -r .titledbCommit /tmp/previous-manifest.json)" == "$titledb" ]] && \
+             [[ "$needs_filelists" == "false" ]]; then
             changed=false
           fi
           tag="metadata-${langegen:0:12}-${titledb:0:12}"
           if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && \
-                "${{ github.event.inputs.force_rebuild }}" == "true" ]]; then
+                "${{ github.event.inputs.force_rebuild }}" == "true" ]] || \
+             [[ "$needs_filelists" == "true" ]]; then
             changed=true
             tag="${tag}-run-${GITHUB_RUN_NUMBER}"
           fi
@@ -78,6 +87,8 @@ jobs:
             --index-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${{ steps.sources.outputs.tag }}/game_metadata_index.json" \
             --output output \
             --require-filelists \
+            --filelist-fetch-limit 300 \
+            --filelist-fetch-timeout-seconds 20 \
             "${previous[@]}" \
             "${filelists[@]}"
 

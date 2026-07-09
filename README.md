@@ -42,6 +42,9 @@ python3 build_index.py ... --require-filelists
 Manual workflow runs force a rebuild by default and publish a unique
 `metadata-...-run-<run_number>` release tag, even when upstream commits did not
 change.
+The workflow fetches at most 300 new RuTracker file lists per run, so the first
+seed completes through several manual or scheduled runs instead of one silent
+multi-hour job.
 
 Manual corrections belong in `overrides.json` as `topic_id` to 16-character
 base Title ID mappings. A base application has its low twelve bits clear, so

@@ -202,7 +202,11 @@ def parse_torrent_filelist(html: str) -> list[dict[str, Any]]:
     return files
 
 
-def fetch_topic_filelist(topic_id: str, cookie: str) -> list[dict[str, Any]]:
+def fetch_topic_filelist(
+    topic_id: str,
+    cookie: str,
+    timeout_seconds: float = 60.0,
+) -> list[dict[str, Any]]:
     body = urllib.parse.urlencode({"t": topic_id}).encode()
     request = urllib.request.Request(
         RUTRACKER_FILELIST_URL,
@@ -215,7 +219,7 @@ def fetch_topic_filelist(topic_id: str, cookie: str) -> list[dict[str, Any]]:
             "Referer": f"https://rutracker.org/forum/viewtopic.php?t={topic_id}",
         },
     )
-    with urllib.request.urlopen(request, timeout=60) as response:
+    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
         charset = response.headers.get_content_charset() or "windows-1251"
         html = response.read().decode(charset, "replace")
     return parse_torrent_filelist(html)
@@ -285,6 +289,9 @@ def refresh_filelist_cache(
     *,
     cookie: str,
     delay_seconds: float,
+    fetch_limit: int | None = None,
+    timeout_seconds: float = 60.0,
+    progress_interval: int = 25,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     refreshed = _normalize_filelist_cache(cache)
     entries: dict[str, Any] = refreshed["entries"]
@@ -293,10 +300,15 @@ def refresh_filelist_cache(
         "fileListCached": 0,
         "fileListMissing": 0,
         "fileListErrors": [],
+        "fileListFetchLimit": fetch_limit or 0,
+        "fileListFetchLimitReached": False,
     }
+    scanned = 0
+    log_progress = progress_interval > 0
     for game in langegen:
         if not isinstance(game, dict):
             continue
+        scanned += 1
         topic_id = str(game.get("topic_id", ""))
         info_hash = info_hash_from_magnet(game.get("magnet"))
         if not topic_id or not info_hash:
@@ -308,8 +320,20 @@ def refresh_filelist_cache(
         if not cookie:
             stats["fileListMissing"] += 1
             continue
+        if fetch_limit is not None and stats["fileListFetched"] >= fetch_limit:
+            stats["fileListMissing"] += 1
+            stats["fileListFetchLimitReached"] = True
+            continue
+        if log_progress:
+            print(
+                "[filelist] fetch "
+                f"{stats['fileListFetched'] + 1}"
+                f"{'/' + str(fetch_limit) if fetch_limit is not None else ''} "
+                f"topic={topic_id} scanned={scanned}",
+                flush=True,
+            )
         try:
-            files = fetch_topic_filelist(topic_id, cookie)
+            files = fetch_topic_filelist(topic_id, cookie, timeout_seconds)
         except Exception as error:
             stats["fileListMissing"] += 1
             stats["fileListErrors"].append({
@@ -327,8 +351,25 @@ def refresh_filelist_cache(
             "files": files,
         }
         stats["fileListFetched"] += 1
+        if log_progress and stats["fileListFetched"] % progress_interval == 0:
+            print(
+                "[filelist] progress "
+                f"fetched={stats['fileListFetched']} "
+                f"cached={stats['fileListCached']} "
+                f"missing={stats['fileListMissing']}",
+                flush=True,
+            )
         if delay_seconds > 0:
             time.sleep(delay_seconds)
+    if log_progress:
+        print(
+            "[filelist] summary "
+            f"fetched={stats['fileListFetched']} "
+            f"cached={stats['fileListCached']} "
+            f"missing={stats['fileListMissing']} "
+            f"limit_reached={stats['fileListFetchLimitReached']}",
+            flush=True,
+        )
     return refreshed, stats
 
 
@@ -617,6 +658,10 @@ def build_index(
         "fileListCached": stats.get("fileListCached", 0),
         "fileListMissing": stats.get("fileListMissing", 0),
         "fileListErrors": stats.get("fileListErrors", []),
+        "fileListFetchLimit": stats.get("fileListFetchLimit", 0),
+        "fileListFetchLimitReached": stats.get(
+            "fileListFetchLimitReached", False
+        ),
         "fileTitleIdMatches": methods["file_title_id_largest"],
         "multiTitleIdRows": multi_title_id_rows,
         "fileTitleIdCandidates": file_title_id_candidates,
@@ -698,6 +743,10 @@ def write_outputs(output: Path, entries: list[dict[str, Any]],
             "fileListFetched": report.get("fileListFetched", 0),
             "fileListCached": report.get("fileListCached", 0),
             "fileListMissing": report.get("fileListMissing", 0),
+            "fileListFetchLimit": report.get("fileListFetchLimit", 0),
+            "fileListFetchLimitReached": report.get(
+                "fileListFetchLimitReached", False
+            ),
         },
     }
     (output / "game_metadata_index.json").write_bytes(payload)
@@ -749,6 +798,9 @@ def main() -> None:
     parser.add_argument("--previous-filelists")
     parser.add_argument("--rutracker-cookie-env", default="RUTRACKER_COOKIE")
     parser.add_argument("--filelist-fetch-delay-seconds", type=float, default=1.5)
+    parser.add_argument("--filelist-fetch-limit", type=int, default=0)
+    parser.add_argument("--filelist-fetch-timeout-seconds", type=float, default=60)
+    parser.add_argument("--filelist-progress-interval", type=int, default=25)
     parser.add_argument("--require-filelists", action="store_true")
     args = parser.parse_args()
 
@@ -770,6 +822,11 @@ def main() -> None:
         filelists,
         cookie=cookie,
         delay_seconds=max(0.0, args.filelist_fetch_delay_seconds),
+        fetch_limit=(
+            args.filelist_fetch_limit if args.filelist_fetch_limit > 0 else None
+        ),
+        timeout_seconds=max(1.0, args.filelist_fetch_timeout_seconds),
+        progress_interval=max(0, args.filelist_progress_interval),
     )
     if args.require_filelists and not cookie and filelist_stats["fileListMissing"]:
         raise SystemExit(
