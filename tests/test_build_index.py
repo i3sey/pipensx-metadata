@@ -245,6 +245,17 @@ class BuildIndexTests(unittest.TestCase):
         self.assertTrue(stats["fileListFetchLimitReached"])
         self.assertEqual(len(cache["entries"]), 2)
 
+    def test_cache_outputs_skip_metadata_manifest(self):
+        filelists = filelists_for((1, "A", []))
+        report = {"fileListFetchLimitReached": True, "fileListMissing": 1}
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            build_index.write_cache_outputs(output, filelists, report)
+
+            self.assertTrue((output / "filelists.json").exists())
+            self.assertTrue((output / "match-report.json").exists())
+            self.assertFalse((output / "manifest.json").exists())
+
     def test_unmatched_rows_get_non_publishing_fuzzy_suggestions(self):
         langegen = [game("Alfa Gaem [NSZ]", "3", 102)]
         titledb = {

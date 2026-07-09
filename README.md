@@ -45,6 +45,9 @@ change.
 The workflow fetches at most 300 new RuTracker file lists per run, so the first
 seed completes through several manual or scheduled runs instead of one silent
 multi-hour job.
+Partial seed runs update a separate `filelists-cache` release only. The normal
+metadata release is published as `latest` only after the cache is complete
+enough to pass the coverage regression gate.
 
 Manual corrections belong in `overrides.json` as `topic_id` to 16-character
 base Title ID mappings. A base application has its low twelve bits clear, so

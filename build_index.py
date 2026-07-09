@@ -764,6 +764,18 @@ def write_outputs(output: Path, entries: list[dict[str, Any]],
     return manifest
 
 
+def write_cache_outputs(output: Path, filelists: dict[str, Any],
+                        report: dict[str, Any]) -> None:
+    output.mkdir(parents=True, exist_ok=True)
+    (output / "filelists.json").write_text(
+        json.dumps(_normalize_filelist_cache(filelists),
+                   ensure_ascii=False, indent=2) + "\n"
+    )
+    (output / "match-report.json").write_text(
+        json.dumps(report, ensure_ascii=False, indent=2) + "\n"
+    )
+
+
 def validate_regression(report: dict[str, Any], previous_manifest: dict[str, Any],
                         max_drop: float = 0.02) -> None:
     previous = float(previous_manifest.get("stats", {}).get("coverage", 0.0))
@@ -801,6 +813,7 @@ def main() -> None:
     parser.add_argument("--filelist-fetch-limit", type=int, default=0)
     parser.add_argument("--filelist-fetch-timeout-seconds", type=float, default=60)
     parser.add_argument("--filelist-progress-interval", type=int, default=25)
+    parser.add_argument("--cache-only-on-fetch-limit", action="store_true")
     parser.add_argument("--require-filelists", action="store_true")
     args = parser.parse_args()
 
@@ -837,6 +850,16 @@ def main() -> None:
         raise SystemExit("no RuTracker file lists are available")
     entries, report = build_index(langegen, titledb, overrides,
                                   filelists, filelist_stats)
+    if args.cache_only_on_fetch_limit and report["fileListFetchLimitReached"]:
+        write_cache_outputs(Path(args.output), filelists, report)
+        print(
+            "cached partial file lists; "
+            f"fetched={report['fileListFetched']} "
+            f"cached={report['fileListCached']} "
+            f"missing={report['fileListMissing']}",
+            flush=True,
+        )
+        return
     if args.previous_manifest:
         validate_regression(report, _load_json(args.previous_manifest))
     manifest = write_outputs(

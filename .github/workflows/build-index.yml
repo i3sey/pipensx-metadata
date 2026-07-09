@@ -35,7 +35,7 @@ jobs:
           titledb="$(git ls-remote https://github.com/blawar/titledb.git refs/heads/master | cut -f1)"
           curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/manifest.json \
             -o /tmp/previous-manifest.json || true
-          curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/latest/download/filelists.json \
+          curl -fsSL https://github.com/${GITHUB_REPOSITORY}/releases/download/filelists-cache/filelists.json \
             -o /tmp/previous-filelists.json || true
           needs_filelists=false
           if [[ ! -s /tmp/previous-filelists.json ]]; then
@@ -89,6 +89,7 @@ jobs:
             --require-filelists \
             --filelist-fetch-limit 300 \
             --filelist-fetch-timeout-seconds 20 \
+            --cache-only-on-fetch-limit \
             "${previous[@]}" \
             "${filelists[@]}"
 
@@ -99,12 +100,29 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          gh release create "${{ steps.sources.outputs.tag }}" \
-            output/game_metadata_index.json \
-            output/manifest.json \
-            output/match-report.json \
-            output/filelists.json \
-            --repo "$GITHUB_REPOSITORY" \
-            --title "Metadata ${{ steps.sources.outputs.tag }}" \
-            --notes "Langegen ${{ steps.sources.outputs.langegen }}; titledb ${{ steps.sources.outputs.titledb }}" \
-            --latest
+          if [[ -s output/manifest.json ]]; then
+            gh release create "${{ steps.sources.outputs.tag }}" \
+              output/game_metadata_index.json \
+              output/manifest.json \
+              output/match-report.json \
+              output/filelists.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Metadata ${{ steps.sources.outputs.tag }}" \
+              --notes "Langegen ${{ steps.sources.outputs.langegen }}; titledb ${{ steps.sources.outputs.titledb }}" \
+              --latest
+            gh release upload filelists-cache output/filelists.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber || \
+            gh release create filelists-cache output/filelists.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "File-list cache" \
+              --notes "Latest RuTracker file-list cache"
+          else
+            gh release upload filelists-cache output/filelists.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber || \
+            gh release create filelists-cache output/filelists.json \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "File-list cache" \
+              --notes "Partial RuTracker file-list cache"
+          fi
