@@ -39,6 +39,10 @@ export RUTRACKER_COOKIE='bb_session=...; bb_data=...'
 python3 build_index.py ... --require-filelists
 ```
 
+Manual workflow runs force a rebuild by default and publish a unique
+`metadata-...-run-<run_number>` release tag, even when upstream commits did not
+change.
+
 Manual corrections belong in `overrides.json` as `topic_id` to 16-character
 base Title ID mappings. A base application has its low twelve bits clear, so
 its ID ends in `000`, not necessarily `0000`.

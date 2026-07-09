@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "17 */6 * * *"
   workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: "Build a new release even when upstream commits are unchanged"
+        required: false
+        default: "true"
 
 permissions:
   contents: write
@@ -39,10 +44,16 @@ jobs:
              [[ "$(jq -r .titledbCommit /tmp/previous-manifest.json)" == "$titledb" ]]; then
             changed=false
           fi
+          tag="metadata-${langegen:0:12}-${titledb:0:12}"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" && \
+                "${{ github.event.inputs.force_rebuild }}" == "true" ]]; then
+            changed=true
+            tag="${tag}-run-${GITHUB_RUN_NUMBER}"
+          fi
           echo "langegen=$langegen" >> "$GITHUB_OUTPUT"
           echo "titledb=$titledb" >> "$GITHUB_OUTPUT"
           echo "changed=$changed" >> "$GITHUB_OUTPUT"
-          echo "tag=metadata-${langegen:0:12}-${titledb:0:12}" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Build verified index
         if: steps.sources.outputs.changed == 'true'
