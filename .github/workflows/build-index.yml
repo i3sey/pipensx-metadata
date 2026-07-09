@@ -100,6 +100,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          mark_cache_not_latest() {
+            release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/filelists-cache" --jq .id)"
+            gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+              -f make_latest=false >/dev/null
+          }
           if [[ -s output/manifest.json ]]; then
             gh release create "${{ steps.sources.outputs.tag }}" \
               output/game_metadata_index.json \
@@ -116,7 +121,9 @@ jobs:
             gh release create filelists-cache output/filelists.json \
               --repo "$GITHUB_REPOSITORY" \
               --title "File-list cache" \
-              --notes "Latest RuTracker file-list cache"
+              --notes "Latest RuTracker file-list cache" \
+              --latest=false
+            mark_cache_not_latest
           else
             gh release upload filelists-cache output/filelists.json \
               --repo "$GITHUB_REPOSITORY" \
@@ -124,5 +131,7 @@ jobs:
             gh release create filelists-cache output/filelists.json \
               --repo "$GITHUB_REPOSITORY" \
               --title "File-list cache" \
-              --notes "Partial RuTracker file-list cache"
+              --notes "Partial RuTracker file-list cache" \
+              --latest=false
+            mark_cache_not_latest
           fi
