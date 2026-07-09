@@ -103,6 +103,7 @@ jobs:
           mark_cache_not_latest() {
             release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/filelists-cache" --jq .id)"
             gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+              -F prerelease=true \
               -f make_latest=false >/dev/null
           }
           if [[ -s output/manifest.json ]]; then
@@ -122,6 +123,7 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --title "File-list cache" \
               --notes "Latest RuTracker file-list cache" \
+              --prerelease \
               --latest=false
             mark_cache_not_latest
           else
@@ -132,6 +134,7 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --title "File-list cache" \
               --notes "Partial RuTracker file-list cache" \
+              --prerelease \
               --latest=false
             mark_cache_not_latest
           fi
