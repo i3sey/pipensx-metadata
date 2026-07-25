@@ -31,6 +31,8 @@ TITLE_ID_RE = re.compile(r"^[0-9A-F]{16}$")
 TITLE_ID_ANYWHERE_RE = re.compile(r"\b0100[0-9A-Fa-f]{12}\b")
 INFO_HASH_RE = re.compile(r"^[0-9A-F]{40}$")
 ESHOP_IMAGE_PREFIX = "https://img-eshop.cdn.nintendo.net/"
+# Largest sane titledb numberOfPlayers; the biggest real value is 20.
+MAX_PLAYERS = 64
 SIZE_RE = re.compile(
     r"(?P<value>\d+(?:[.,]\d+)?)\s*"
     r"(?P<unit>bytes?|b|kb|kib|mb|mib|gb|gib|tb|tib|"
@@ -405,6 +407,13 @@ def _metadata_record(info_hash: str, source_title: str, method: str,
             value for value in categories[:6]
             if isinstance(value, str) and value
         ]
+    # eShop "No. of players" = how many can play on one console, so >= 2 is the
+    # couch-multiplayer signal the client filters on. Null for ~10k titledb
+    # records; bool is an int subclass, hence the explicit reject.
+    players = record.get("numberOfPlayers")
+    if isinstance(players, int) and not isinstance(players, bool) \
+            and 0 < players <= MAX_PLAYERS:
+        result["players"] = players
     return result
 
 
@@ -698,6 +707,11 @@ def validate_entries(entries: list[dict[str, Any]]) -> None:
             raise ValueError(f"entry {index} has an empty name")
         if not isinstance(icon_url, str) or not icon_url.startswith(ESHOP_IMAGE_PREFIX):
             raise ValueError(f"entry {index} has a non-eShop iconUrl")
+        if "players" in item:
+            players = item["players"]
+            if not isinstance(players, int) or isinstance(players, bool) \
+                    or not 0 < players <= MAX_PLAYERS:
+                raise ValueError(f"entry {index} has an invalid players count")
 
 
 def write_outputs(output: Path, entries: list[dict[str, Any]],

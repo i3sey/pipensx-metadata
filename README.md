@@ -13,6 +13,12 @@ either changes, it publishes an immutable GitHub Release containing:
 - `filelists.json` — cached RuTracker file lists keyed by `topic_id` and
   info-hash.
 
+Records carry an optional `players` field — titledb `numberOfPlayers`, i.e. how
+many people can play on one console. The client filters its catalogue on it
+(2+ means couch multiplayer) and shows it on the game page. The field is
+optional on purpose: `schemaVersion` stays 1, so a client built before it
+existed keeps reading new releases unchanged.
+
 Matching is deliberately conservative: topic overrides, Title IDs extracted
 from RuTracker file names, then embedded base Title IDs in the release text.
 If a file list contains multiple base Title IDs, the largest parsed file set

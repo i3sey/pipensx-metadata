@@ -319,6 +319,51 @@ class BuildIndexTests(unittest.TestCase):
                 {"coverage": 0.69}, {"stats": {"coverage": 0.72}}
             )
 
+    def test_player_count_is_published_when_titledb_carries_one(self):
+        langegen = [
+            game("Couch Game [NSP][ENG]", "A", 1),
+            game("Solo Game [NSP][ENG]", "B", 2),
+            game("Unknown Game [NSP][ENG]", "C", 3),
+        ]
+        couch = title("0100000000001000", "Couch Game")
+        couch["numberOfPlayers"] = 4
+        solo = title("0100000000002000", "Solo Game")
+        solo["numberOfPlayers"] = 1
+        unknown = title("0100000000003000", "Unknown Game")
+        unknown["numberOfPlayers"] = None
+        filelists = filelists_for(
+            (1, "A", [{"path": "Couch Game [0100000000001000].nsp", "size": 8}]),
+            (2, "B", [{"path": "Solo Game [0100000000002000].nsp", "size": 7}]),
+            (3, "C", [{"path": "Unknown Game [0100000000003000].nsp", "size": 6}]),
+        )
+
+        entries, _ = build_index.build_index(
+            langegen, {"1": couch, "2": solo, "3": unknown}, {}, filelists
+        )
+
+        by_id = {entry["titleId"]: entry for entry in entries}
+        self.assertEqual(by_id["0100000000001000"]["players"], 4)
+        self.assertEqual(by_id["0100000000002000"]["players"], 1)
+        self.assertNotIn("players", by_id["0100000000003000"])
+
+    def test_output_validation_rejects_invalid_player_count(self):
+        def entry(players):
+            return [
+                {
+                    "infoHash": "A" * 40,
+                    "titleId": "0100000000001000",
+                    "name": "Game",
+                    "iconUrl": build_index.ESHOP_IMAGE_PREFIX + "i/icon.jpg",
+                    "players": players,
+                }
+            ]
+
+        for players in (0, -1, True, "4", build_index.MAX_PLAYERS + 1):
+            with self.subTest(players=players):
+                with self.assertRaises(ValueError):
+                    build_index.validate_entries(entry(players))
+        build_index.validate_entries(entry(4))
+
     def test_output_validation_rejects_non_eshop_icon(self):
         entries = [
             {
