@@ -966,6 +966,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "01000D3013E8C000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 130748,
+   "igdbName": "SpongeBob: Krusty Cook-Off",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01000D3019E24000": {
    "fetchedAt": "2026-07-25T15:41:34Z",
    "igdbId": 187655,
@@ -1212,6 +1219,13 @@
    "fetchedAt": "2026-07-25T15:41:34Z",
    "igdbId": 343316,
    "igdbName": "Operation Night Strikers",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100103011894000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 150502,
+   "igdbName": "Naught",
    "modes": [],
    "platformSource": "none"
   },
@@ -1754,6 +1768,13 @@
    "modes": [],
    "platformSource": "any"
   },
+  "010016D02485C000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 325283,
+   "igdbName": "Blippo+",
+   "modes": [],
+   "platformSource": "none"
+  },
   "010016E025E60000": {
    "fetchedAt": "2026-07-25T15:41:13Z",
    "igdbId": 200544,
@@ -2038,6 +2059,13 @@
    "fetchedAt": "2026-07-25T15:41:12Z",
    "igdbId": 90146,
    "igdbName": "Another Sight",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "01001AC00ED72000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 196874,
+   "igdbName": "If My Heart Had Wings",
    "modes": [],
    "platformSource": "none"
   },
@@ -2661,6 +2689,13 @@
     "online"
    ],
    "platformSource": "130"
+  },
+  "010022801242C000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 136255,
+   "igdbName": "KukkoroDays",
+   "modes": [],
+   "platformSource": "any"
   },
   "01002290253B4000": {
    "fetchedAt": "2026-07-25T15:41:23Z",
@@ -3866,6 +3901,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "01003030161DC000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 175809,
+   "igdbName": "Monomals",
+   "modes": [],
+   "platformSource": "none"
+  },
   "010030301ABC2000": {
    "fetchedAt": "2026-07-25T15:41:57Z",
    "igdbId": 252504,
@@ -4918,6 +4960,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "01003AC017294000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 278476,
+   "igdbName": "Valis: The Fantasm Soldier",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01003AD0123A2000": {
    "fetchedAt": "2026-07-25T15:41:26Z",
    "igdbId": 122122,
@@ -5392,6 +5441,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100416004C00000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 76217,
+   "igdbName": "Doom",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100416008A12000": {
    "fetchedAt": "2026-07-25T15:41:34Z",
    "igdbId": 107292,
@@ -5849,6 +5905,13 @@
    ],
    "platformSource": "agnostic"
   },
+  "010047B010260000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 103725,
+   "igdbName": "Space Pioneer",
+   "modes": [],
+   "platformSource": "none"
+  },
   "010047E01EA24000": {
    "fetchedAt": "2026-07-25T15:41:46Z",
    "igdbId": 314935,
@@ -5925,6 +5988,13 @@
    "fetchedAt": "2026-07-25T15:41:47Z",
    "igdbId": 38754,
    "igdbName": "Tangledeep",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "010048F0195E8000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 261085,
+   "igdbName": "Quake II",
    "modes": [],
    "platformSource": "none"
   },
@@ -7325,6 +7395,13 @@
    ],
    "platformSource": "any"
   },
+  "01005B301F29E000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 295314,
+   "igdbName": "Castaway",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01005B5009364000": {
    "fetchedAt": "2026-07-25T15:41:53Z",
    "igdbId": 8506,
@@ -7476,6 +7553,13 @@
    "fetchedAt": "2026-07-25T15:41:34Z",
    "igdbId": 361823,
    "igdbName": "Outlaws + Handful of Missions: Remaster",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "01005E7013476000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 197833,
+   "igdbName": "Mad Father",
    "modes": [],
    "platformSource": "none"
   },
@@ -8050,6 +8134,13 @@
    "fetchedAt": "2026-07-25T15:42:00Z",
    "igdbId": 5541,
    "igdbName": "Sherlock Holmes: Crimes & Punishments",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "01006560184E6000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 239392,
+   "igdbName": "Mortal Kombat 1",
    "modes": [],
    "platformSource": "none"
   },
@@ -9886,6 +9977,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "01007D901FF7C000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 304131,
+   "igdbName": "Riviera: The Promised Land",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01007DC0219EC000": {
    "fetchedAt": "2026-07-25T15:41:46Z",
    "igdbId": 277203,
@@ -11273,6 +11371,13 @@
    "fetchedAt": "2026-07-25T15:41:38Z",
    "igdbId": 366773,
    "igdbName": "Samurai Academy: Paws of Fury",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100901014412000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 147675,
+   "igdbName": "From Shadows",
    "modes": [],
    "platformSource": "none"
   },
@@ -14418,6 +14523,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100B410040F2000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 194216,
+   "igdbName": "Dead Synchronicity: Tomorrow Comes Today",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100B410138C0000": {
    "fetchedAt": "2026-07-25T15:41:51Z",
    "igdbId": 129693,
@@ -16414,6 +16526,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100CD10266C2000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 112854,
+   "igdbName": "Firework",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100CD300880E000": {
    "fetchedAt": "2026-07-25T15:42:01Z",
    "igdbId": 196847,
@@ -17267,6 +17386,13 @@
    "fetchedAt": "2026-07-25T15:41:33Z",
    "igdbId": 64957,
    "igdbName": "Mutazione",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100D7800E9E0000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 119391,
+   "igdbName": "Trials of Mana",
    "modes": [],
    "platformSource": "none"
   },
@@ -19424,6 +19550,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100F25022A30000": {
+   "fetchedAt": "2026-07-25T15:54:46Z",
+   "igdbId": 363998,
+   "igdbName": "Ys Memoire: Revelations in Celceta",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100F26023848000": {
    "fetchedAt": "2026-07-25T15:41:49Z",
    "igdbId": 199737,
@@ -20534,10 +20667,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "01000D3013E8C000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "01000D501A086000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -20565,10 +20694,6 @@
   "01000F5020C9E000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "0100103011894000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "010010400D46A000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -20638,10 +20763,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "010016D02485C000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "010017A0128C4000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -20673,10 +20794,6 @@
   "01001A9018560000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "01001AC00ED72000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "01001AF00CE54000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -20777,10 +20894,6 @@
   "0100224004004000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "010022801242C000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "0100229019E90000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -20938,10 +21051,6 @@
    "checkedAt": "2026-07-25T15:49:40Z",
    "reason": "none"
   },
-  "01003030161DC000": {
-   "checkedAt": "2026-07-25T15:49:40Z",
-   "reason": "ambiguous"
-  },
   "01003080234F2000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -21030,10 +21139,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "01003AC017294000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "01003B0018BC8000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -21118,10 +21223,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "0100416004C00000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "01004200189F4000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -21182,17 +21283,9 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "010047B010260000": {
-   "checkedAt": "2026-07-25T15:49:40Z",
-   "reason": "ambiguous"
-  },
   "0100489013A3C000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "010048F0195E8000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "010048F0251E6000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -21374,10 +21467,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "01005B301F29E000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "01005B6008132000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -21401,10 +21490,6 @@
   "01005E100A4F0000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "01005E7013476000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "01005F80166FA000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -21473,10 +21558,6 @@
   "0100654021090000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "01006560184E6000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "0100664019632000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -21782,10 +21863,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "01007D901FF7C000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "01007E30210DE000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -21949,10 +22026,6 @@
   "01008FE00E2F6000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "0100901014412000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "010091001F492000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -22318,10 +22391,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "0100B410040F2000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "0100B46017500000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -22538,10 +22607,6 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
-  "0100CD10266C2000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
-  },
   "0100CD4011A18000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -22649,10 +22714,6 @@
   "0100D72021796000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "0100D7800E9E0000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "0100D7A01B7A2000": {
    "checkedAt": "2026-07-25T15:41:10Z",
@@ -22977,10 +23038,6 @@
   "0100F200178F4000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
-  },
-  "0100F25022A30000": {
-   "checkedAt": "2026-07-25T15:41:10Z",
-   "reason": "ambiguous"
   },
   "0100F2600D710000": {
    "checkedAt": "2026-07-25T15:41:10Z",

@@ -603,6 +603,13 @@ def refresh_igdb_cache(
         "igdbErrors": [],
     }
 
+    # A human pinning a title id outranks whatever the name pass concluded
+    # about it, including "ambiguous" — that verdict is exactly what overrides
+    # exist to answer, so drop it and look the pinned id up again.
+    for title_id in overrides:
+        known.pop(title_id, None)
+        misses.pop(title_id, None)
+
     # One title id, one lookup: several releases of the same game share it.
     pending: dict[str, str] = {}
     for entry in entries:

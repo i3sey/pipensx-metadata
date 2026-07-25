@@ -470,6 +470,34 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertEqual(stats["igdbFetched"], 0)
 
+    def test_igdb_override_outranks_a_recorded_ambiguity(self):
+        entries = [{"titleId": "0100000000001000", "name": "Twin Release"}]
+        cache = {
+            "schemaVersion": 1,
+            "entries": {},
+            "misses": {"0100000000001000": {"reason": "ambiguous",
+                                            "checkedAt": "2026-07-25T00:00:00Z"}},
+        }
+        bodies = []
+
+        def fake_query(body):
+            bodies.append(body)
+            return [{"id": 20, "name": "Twin Release",
+                     "multiplayer_modes": [{"platform": 130,
+                                            "splitscreen": True}]}]
+
+        cache, stats = build_index.refresh_igdb_cache(
+            entries, cache, client_id="id", client_secret="secret",
+            overrides={"0100000000001000": 20}, query=fake_query,
+        )
+
+        # Resolving an ambiguity is what an override is for, so the recorded
+        # verdict must not keep the pinned id from being looked up.
+        self.assertNotIn("0100000000001000", cache["misses"])
+        self.assertEqual(cache["entries"]["0100000000001000"]["modes"], ["split"])
+        self.assertEqual(stats["igdbAmbiguous"], 0)
+        self.assertIn("where id = (20)", bodies[0])
+
     def test_igdb_fetch_limit_defers_the_rest(self):
         entries = [
             {"titleId": f"010000000000{index}000", "name": f"Game {index}"}
