@@ -69,6 +69,8 @@ jobs:
         shell: bash
         env:
           RUTRACKER_COOKIE: ${{ secrets.RUTRACKER_COOKIE }}
+          IGDB_CLIENT_ID: ${{ secrets.IGDB_CLIENT_ID }}
+          IGDB_SECRET: ${{ secrets.IGDB_SECRET }}
         run: |
           set -euo pipefail
           previous=()
@@ -92,6 +94,24 @@ jobs:
             --cache-only-on-fetch-limit \
             "${previous[@]}" \
             "${filelists[@]}"
+
+      # The IGDB cache grows by whatever this run resolved. Committing it keeps
+      # the lookups one-off (and the diffs readable) instead of re-asking IGDB
+      # for 3400 names every six hours.
+      - name: Commit IGDB cache
+        if: steps.sources.outputs.changed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- igdb_modes.json; then
+            echo "IGDB cache unchanged"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add igdb_modes.json
+          git commit -m "data: refresh IGDB multiplayer modes"
+          git push origin HEAD:${GITHUB_REF_NAME}
 
       - name: Publish immutable release
         if: steps.sources.outputs.changed == 'true'

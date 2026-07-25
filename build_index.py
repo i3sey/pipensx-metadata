@@ -375,6 +375,366 @@ def refresh_filelist_cache(
     return refreshed, stats
 
 
+# ---------------------------------------------------------------------------
+# IGDB multiplayer modes
+#
+# titledb only says how many players fit on one console; IGDB is the only
+# public source that says *how* they play (split screen, couch co-op, local
+# wireless, online). It has no Switch Title IDs and no eShop entry in
+# external_games, so the join is by name — hence the same conservative rule
+# the rest of this file follows: an exact normalised name match publishes,
+# anything else is reported and waits for a manual override.
+#
+# Matches are cached in a committed igdb_modes.json and only the titles that
+# are missing from it are fetched, a bounded number per run.
+# ---------------------------------------------------------------------------
+
+IGDB_TOKEN_URL = "https://id.twitch.tv/oauth2/token"
+IGDB_GAMES_URL = "https://api.igdb.com/v4/games"
+IGDB_SWITCH_PLATFORM = 130
+# IGDB allows 4 requests/second; one name batch is one request.
+IGDB_REQUEST_DELAY_SECONDS = 0.3
+IGDB_BATCH_SIZE = 100
+IGDB_MODES = ("split", "coop", "lan", "online")
+
+
+def _empty_igdb_cache() -> dict[str, Any]:
+    return {"schemaVersion": 1, "entries": {}, "misses": {}}
+
+
+def _normalize_igdb_cache(value: Any) -> dict[str, Any]:
+    normalized = _empty_igdb_cache()
+    if not isinstance(value, dict):
+        return normalized
+    entries = value.get("entries")
+    if isinstance(entries, dict):
+        for title_id, entry in entries.items():
+            if not is_base_title_id(title_id) or not isinstance(entry, dict):
+                continue
+            modes = [
+                mode for mode in entry.get("modes", [])
+                if mode in IGDB_MODES
+            ]
+            normalized["entries"][title_id.upper()] = {
+                "igdbId": entry.get("igdbId"),
+                "igdbName": str(entry.get("igdbName", "")),
+                "modes": modes,
+                "platformSource": str(entry.get("platformSource", "any")),
+                "fetchedAt": str(entry.get("fetchedAt", "")),
+            }
+    misses = value.get("misses")
+    if isinstance(misses, dict):
+        for title_id, entry in misses.items():
+            if not is_base_title_id(title_id) or not isinstance(entry, dict):
+                continue
+            normalized["misses"][title_id.upper()] = {
+                "reason": str(entry.get("reason", "none")),
+                "checkedAt": str(entry.get("checkedAt", "")),
+            }
+    return normalized
+
+
+def load_igdb_cache(path: str | None) -> dict[str, Any]:
+    if not path:
+        return _empty_igdb_cache()
+    file = Path(path)
+    if not file.exists():
+        return _empty_igdb_cache()
+    return _normalize_igdb_cache(json.loads(file.read_text()))
+
+
+def igdb_display_name(value: Any) -> str:
+    """Cleaned name for IGDB's case-sensitive `=` operator.
+
+    Only decoration goes: trademark marks, bracketed release tags and the
+    "+ 17 DLC" suffix RuTracker-derived titles carry. Punctuation and case
+    stay, because that is what IGDB matches on.
+    """
+    text = str(value or "")
+    text = re.sub(r"\s*\+\s*\d+\s*DLC.*$", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\[[^]]*]", " ", text)
+    text = re.sub(r"\([^)]*\)", " ", text)
+    for mark in ("™", "®", "©"):
+        text = text.replace(mark, "")
+    return " ".join(text.split())
+
+
+def _igdb_token(client_id: str, client_secret: str,
+                timeout_seconds: float) -> str:
+    query = urllib.parse.urlencode({
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "grant_type": "client_credentials",
+    })
+    request = urllib.request.Request(f"{IGDB_TOKEN_URL}?{query}", data=b"")
+    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+        payload = json.load(response)
+    token = payload.get("access_token")
+    if not isinstance(token, str) or not token:
+        raise ValueError("IGDB token response carried no access_token")
+    return token
+
+
+def _igdb_query(body: str, *, client_id: str, token: str,
+                timeout_seconds: float) -> list[dict[str, Any]]:
+    request = urllib.request.Request(
+        IGDB_GAMES_URL,
+        data=body.encode(),
+        headers={
+            "Client-ID": client_id,
+            "Authorization": f"Bearer {token}",
+            "User-Agent": "pipensx-metadata/1",
+            "Accept": "application/json",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+        payload = json.load(response)
+    if not isinstance(payload, list):
+        raise ValueError(f"unexpected IGDB response: {payload!r}")
+    return payload
+
+
+def _igdb_quote(value: str) -> str:
+    return '"' + value.replace("\\", "\\\\").replace('"', '\\"') + '"'
+
+
+def derive_multiplayer_modes(records: Any) -> tuple[list[str], str]:
+    """Fold IGDB multiplayer_modes into our four flags.
+
+    Prefer the Switch record; fall back to a platform-agnostic one, then to
+    the union across platforms — most games that were not given a per-platform
+    record still ship the same modes everywhere, and the source is recorded so
+    a wrong call is traceable.
+    """
+    if not isinstance(records, list) or not records:
+        return [], "none"
+    usable = [record for record in records if isinstance(record, dict)]
+    if not usable:
+        return [], "none"
+    switch = [r for r in usable if r.get("platform") == IGDB_SWITCH_PLATFORM]
+    agnostic = [r for r in usable if r.get("platform") is None]
+    if switch:
+        selected, source = switch, str(IGDB_SWITCH_PLATFORM)
+    elif agnostic:
+        selected, source = agnostic, "agnostic"
+    else:
+        selected, source = usable, "any"
+
+    def flag(name: str) -> bool:
+        return any(bool(record.get(name)) for record in selected)
+
+    def count(name: str) -> int:
+        values = [record.get(name) for record in selected]
+        return max(
+            (value for value in values if isinstance(value, int)), default=0
+        )
+
+    modes = []
+    if flag("splitscreen"):
+        modes.append("split")
+    if flag("offlinecoop") or flag("campaigncoop") or count("offlinecoopmax") >= 2:
+        modes.append("coop")
+    if flag("lancoop"):
+        modes.append("lan")
+    if flag("onlinecoop") or count("onlinemax") >= 2:
+        modes.append("online")
+    return modes, source
+
+
+def _igdb_index_by_name(games: list[dict[str, Any]]) -> dict[str, list[dict]]:
+    """Normalised name (and alternative names) -> the games answering to it."""
+    by_name: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for game in games:
+        if not isinstance(game, dict):
+            continue
+        keys = {normalize_title(game.get("name"))}
+        for alternative in game.get("alternative_names", []) or []:
+            if isinstance(alternative, dict):
+                keys.add(normalize_title(alternative.get("name")))
+        for key in keys:
+            if key:
+                by_name[key].append(game)
+    return by_name
+
+
+def _igdb_cache_entry(game: dict[str, Any]) -> dict[str, Any]:
+    modes, source = derive_multiplayer_modes(game.get("multiplayer_modes"))
+    return {
+        "igdbId": game.get("id"),
+        "igdbName": str(game.get("name", "")),
+        "modes": modes,
+        "platformSource": source,
+        "fetchedAt": dt.datetime.now(dt.timezone.utc).replace(
+            microsecond=0
+        ).isoformat().replace("+00:00", "Z"),
+    }
+
+
+IGDB_FIELDS = (
+    "fields id,name,alternative_names.name,multiplayer_modes.*;"
+)
+
+
+def refresh_igdb_cache(
+    entries: list[dict[str, Any]],
+    cache: dict[str, Any],
+    *,
+    client_id: str,
+    client_secret: str,
+    overrides: dict[str, Any] | None = None,
+    fetch_limit: int | None = None,
+    timeout_seconds: float = 60.0,
+    delay_seconds: float = IGDB_REQUEST_DELAY_SECONDS,
+    query: Any = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    refreshed = _normalize_igdb_cache(cache)
+    known: dict[str, Any] = refreshed["entries"]
+    misses: dict[str, Any] = refreshed["misses"]
+    overrides = {
+        str(key).upper(): value for key, value in (overrides or {}).items()
+    }
+    stats = {
+        "igdbMatched": len(known),
+        "igdbAmbiguous": 0,
+        "igdbMissing": 0,
+        "igdbFetched": 0,
+        "igdbFetchLimit": fetch_limit or 0,
+        "igdbFetchLimitReached": False,
+        "igdbErrors": [],
+    }
+
+    # One title id, one lookup: several releases of the same game share it.
+    pending: dict[str, str] = {}
+    for entry in entries:
+        title_id = str(entry.get("titleId", "")).upper()
+        name = str(entry.get("name", ""))
+        if not title_id or not name or title_id in known:
+            continue
+        if title_id in misses or title_id in pending:
+            continue
+        pending[title_id] = name
+    if not pending:
+        return refreshed, stats
+
+    if not client_id or not client_secret:
+        stats["igdbMissing"] = len(pending)
+        return refreshed, stats
+
+    wanted = sorted(pending)
+    if fetch_limit is not None and len(wanted) > fetch_limit:
+        wanted = wanted[:fetch_limit]
+        stats["igdbFetchLimitReached"] = True
+
+    if query is None:
+        token = _igdb_token(client_id, client_secret, timeout_seconds)
+
+        def query(body: str) -> list[dict[str, Any]]:
+            result = _igdb_query(body, client_id=client_id, token=token,
+                                 timeout_seconds=timeout_seconds)
+            if delay_seconds > 0:
+                time.sleep(delay_seconds)
+            return result
+
+    now = dt.datetime.now(dt.timezone.utc).replace(
+        microsecond=0
+    ).isoformat().replace("+00:00", "Z")
+
+    def resolve(title_id: str, games: list[dict[str, Any]]) -> bool:
+        ids = {game.get("id") for game in games}
+        if len(ids) > 1:
+            misses[title_id] = {"reason": "ambiguous", "checkedAt": now}
+            stats["igdbAmbiguous"] += 1
+            return True
+        known[title_id] = _igdb_cache_entry(games[0])
+        stats["igdbMatched"] += 1
+        return True
+
+    # Manual overrides first: a title id pinned to an IGDB id skips matching.
+    pinned = [tid for tid in wanted if tid in overrides]
+    for batch in _chunked(pinned, IGDB_BATCH_SIZE):
+        ids = ",".join(str(int(overrides[tid])) for tid in batch)
+        try:
+            games = query(
+                f"{IGDB_FIELDS} where id = ({ids}); limit {IGDB_BATCH_SIZE};"
+            )
+        except Exception as error:  # noqa: BLE001 - reported, never fatal
+            stats["igdbErrors"].append({"batch": "overrides", "error": str(error)})
+            continue
+        stats["igdbFetched"] += 1
+        by_id = {game.get("id"): game for game in games}
+        for title_id in batch:
+            game = by_id.get(int(overrides[title_id]))
+            if game:
+                resolve(title_id, [game])
+
+    remaining = [tid for tid in wanted if tid not in known and tid not in misses]
+    # Pass 1 matches IGDB's own name, pass 2 its alternative names. Both are
+    # batched, so 3400 titles cost ~70 requests rather than 3400.
+    for field in ("name", "alternative_names.name"):
+        if not remaining:
+            break
+        by_display: dict[str, list[str]] = defaultdict(list)
+        for title_id in remaining:
+            display = igdb_display_name(pending[title_id])
+            if display:
+                by_display[display].append(title_id)
+        for batch in _chunked(sorted(by_display), IGDB_BATCH_SIZE):
+            names = ",".join(_igdb_quote(name) for name in batch)
+            body = (
+                f"{IGDB_FIELDS} where platforms = ({IGDB_SWITCH_PLATFORM}) & "
+                f"{field} = ({names}); limit 500;"
+            )
+            try:
+                games = query(body)
+            except Exception as error:  # noqa: BLE001 - reported, never fatal
+                stats["igdbErrors"].append({"batch": field, "error": str(error)})
+                continue
+            stats["igdbFetched"] += 1
+            by_name = _igdb_index_by_name(games)
+            for display in batch:
+                candidates = by_name.get(normalize_title(display))
+                if not candidates:
+                    continue
+                for title_id in by_display[display]:
+                    if title_id not in known and title_id not in misses:
+                        resolve(title_id, candidates)
+        remaining = [
+            tid for tid in remaining
+            if tid not in known and tid not in misses
+        ]
+
+    for title_id in remaining:
+        misses[title_id] = {"reason": "none", "checkedAt": now}
+    stats["igdbMissing"] = len(misses)
+    return refreshed, stats
+
+
+def _chunked(values: list[Any], size: int) -> list[list[Any]]:
+    return [values[i:i + size] for i in range(0, len(values), size)]
+
+
+def apply_igdb_modes(entries: list[dict[str, Any]],
+                     cache: dict[str, Any]) -> int:
+    """Stamp cached modes onto the index.
+
+    An absent `modes` key means "nobody described this game's modes", which is
+    what lets the client fall back to the titledb player count. A game IGDB
+    knows but never described (no multiplayer_modes rows at all) is therefore
+    left absent too — writing `[]` would claim it has no multiplayer, and that
+    claim would silently drop couch games out of the filter.
+    """
+    known = _normalize_igdb_cache(cache)["entries"]
+    stamped = 0
+    for entry in entries:
+        entry.pop("modes", None)
+        cached = known.get(str(entry.get("titleId", "")).upper())
+        if not cached or cached["platformSource"] == "none":
+            continue
+        entry["modes"] = list(cached["modes"])
+        stamped += 1
+    return stamped
+
+
 def _metadata_record(info_hash: str, source_title: str, method: str,
                      record: dict[str, Any]) -> dict[str, Any]:
     result: dict[str, Any] = {
@@ -712,6 +1072,11 @@ def validate_entries(entries: list[dict[str, Any]]) -> None:
             if not isinstance(players, int) or isinstance(players, bool) \
                     or not 0 < players <= MAX_PLAYERS:
                 raise ValueError(f"entry {index} has an invalid players count")
+        if "modes" in item:
+            modes = item["modes"]
+            if not isinstance(modes, list) or len(modes) != len(set(modes)) \
+                    or any(mode not in IGDB_MODES for mode in modes):
+                raise ValueError(f"entry {index} has invalid play modes")
 
 
 def write_outputs(output: Path, entries: list[dict[str, Any]],
@@ -761,6 +1126,10 @@ def write_outputs(output: Path, entries: list[dict[str, Any]],
             "fileListFetchLimitReached": report.get(
                 "fileListFetchLimitReached", False
             ),
+            "igdbMatched": report.get("igdbMatched", 0),
+            "igdbAmbiguous": report.get("igdbAmbiguous", 0),
+            "igdbMissing": report.get("igdbMissing", 0),
+            "igdbStamped": report.get("igdbStamped", 0),
         },
     }
     (output / "game_metadata_index.json").write_bytes(payload)
@@ -829,6 +1198,14 @@ def main() -> None:
     parser.add_argument("--filelist-progress-interval", type=int, default=25)
     parser.add_argument("--cache-only-on-fetch-limit", action="store_true")
     parser.add_argument("--require-filelists", action="store_true")
+    parser.add_argument("--igdb-cache", default="igdb_modes.json")
+    parser.add_argument("--igdb-overrides", default="igdb_overrides.json")
+    parser.add_argument("--igdb-client-id-env", default="IGDB_CLIENT_ID")
+    parser.add_argument("--igdb-secret-env", default="IGDB_SECRET")
+    # Titles looked up per run, not requests: lookups are batched 100 at a
+    # time, so the first seed still completes in a handful of runs.
+    parser.add_argument("--igdb-fetch-limit", type=int, default=1200)
+    parser.add_argument("--igdb-fetch-timeout-seconds", type=float, default=60)
     args = parser.parse_args()
 
     overrides_path = Path(args.overrides)
@@ -874,6 +1251,41 @@ def main() -> None:
             flush=True,
         )
         return
+    # IGDB runs on the finished index: it is keyed by the titledb name that
+    # matching already picked, and a run without credentials simply keeps
+    # whatever the committed cache holds.
+    igdb_overrides_path = Path(args.igdb_overrides)
+    igdb_overrides = (
+        json.loads(igdb_overrides_path.read_text())
+        if igdb_overrides_path.exists() else {}
+    )
+    igdb_cache, igdb_stats = refresh_igdb_cache(
+        entries,
+        load_igdb_cache(args.igdb_cache),
+        client_id=os.environ.get(args.igdb_client_id_env, ""),
+        client_secret=os.environ.get(args.igdb_secret_env, ""),
+        overrides=igdb_overrides,
+        fetch_limit=(
+            args.igdb_fetch_limit if args.igdb_fetch_limit > 0 else None
+        ),
+        timeout_seconds=max(1.0, args.igdb_fetch_timeout_seconds),
+    )
+    igdb_stats["igdbStamped"] = apply_igdb_modes(entries, igdb_cache)
+    report.update(igdb_stats)
+    if args.igdb_cache:
+        Path(args.igdb_cache).write_text(
+            json.dumps(igdb_cache, ensure_ascii=False, indent=1,
+                       sort_keys=True) + "\n"
+        )
+    print(
+        f"[igdb] matched={igdb_stats['igdbMatched']} "
+        f"ambiguous={igdb_stats['igdbAmbiguous']} "
+        f"missing={igdb_stats['igdbMissing']} "
+        f"requests={igdb_stats['igdbFetched']} "
+        f"stamped={igdb_stats['igdbStamped']} "
+        f"limit_reached={igdb_stats['igdbFetchLimitReached']}",
+        flush=True,
+    )
     if args.previous_manifest:
         validate_regression(report, _load_json(args.previous_manifest))
     manifest = write_outputs(

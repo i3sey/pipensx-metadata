@@ -19,6 +19,22 @@ many people can play on one console. The client filters its catalogue on it
 optional on purpose: `schemaVersion` stays 1, so a client built before it
 existed keeps reading new releases unchanged.
 
+An optional `modes` array (`split`, `coop`, `lan`, `online`) comes from IGDB's
+`multiplayer_modes`, the only public source that says *how* people play
+together. IGDB carries no Switch Title IDs, so the join is by exact normalised
+name against Switch releases; ambiguous names are reported, never published,
+and can be pinned in `igdb_overrides.json` (`titleId` to IGDB game id).
+Matches live in the committed `igdb_modes.json` cache, so each run only looks
+up titles it has not seen (`--igdb-fetch-limit`, batched 100 names per
+request). Credentials come from `IGDB_CLIENT_ID` / `IGDB_SECRET`; without them
+the build simply reuses the cache.
+
+A game IGDB knows but never described gets no `modes` key at all — writing an
+empty array would assert "no multiplayer", and the client reads a missing key
+as permission to fall back on the titledb player count. Only ~12% of matched
+titles carry mode rows upstream, so that fallback is what keeps the client's
+"local co-op" filter useful.
+
 Matching is deliberately conservative: topic overrides, Title IDs extracted
 from RuTracker file names, then embedded base Title IDs in the release text.
 If a file list contains multiple base Title IDs, the largest parsed file set

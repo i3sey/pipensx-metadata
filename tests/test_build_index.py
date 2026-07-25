@@ -364,6 +364,177 @@ class BuildIndexTests(unittest.TestCase):
                     build_index.validate_entries(entry(players))
         build_index.validate_entries(entry(4))
 
+    def test_multiplayer_modes_prefer_the_switch_record(self):
+        modes, source = build_index.derive_multiplayer_modes([
+            {"platform": 6, "splitscreen": True, "onlinecoop": True},
+            {"platform": 130, "splitscreen": False, "offlinecoop": True},
+        ])
+        self.assertEqual(modes, ["coop"])
+        self.assertEqual(source, "130")
+
+        modes, source = build_index.derive_multiplayer_modes([
+            {"platform": None, "lancoop": True},
+        ])
+        self.assertEqual(modes, ["lan"])
+        self.assertEqual(source, "agnostic")
+
+        # No Switch and no platform-agnostic record: fold the rest together
+        # rather than lose the game, and say where it came from.
+        modes, source = build_index.derive_multiplayer_modes([
+            {"platform": 6, "splitscreen": True},
+            {"platform": 48, "onlinemax": 8},
+        ])
+        self.assertEqual(modes, ["split", "online"])
+        self.assertEqual(source, "any")
+
+        self.assertEqual(build_index.derive_multiplayer_modes([]), ([], "none"))
+        # A record that describes a single-player game is a real answer.
+        self.assertEqual(
+            build_index.derive_multiplayer_modes(
+                [{"platform": 130, "splitscreen": False}]
+            ),
+            ([], "130"),
+        )
+
+    def test_igdb_display_name_only_drops_decoration(self):
+        self.assertEqual(
+            build_index.igdb_display_name(
+                "LEGO® Star Wars™: The Skywalker Saga [NSP] + 17 DLC"
+            ),
+            "LEGO Star Wars: The Skywalker Saga",
+        )
+        self.assertEqual(
+            build_index.igdb_display_name("Overcooked! 2"), "Overcooked! 2"
+        )
+
+    def test_igdb_cache_matches_by_name_and_reports_the_rest(self):
+        entries = [
+            {"titleId": "0100000000001000", "name": "Overcooked!™ 2"},
+            {"titleId": "0100000000002000", "name": "Twin Release"},
+            {"titleId": "0100000000003000", "name": "Nowhere To Be Found"},
+            {"titleId": "0100000000004000", "name": "Alt Named Game"},
+        ]
+        calls = []
+
+        def fake_query(body):
+            calls.append(body)
+            if "& alternative_names.name =" in body:
+                return [{
+                    "id": 40,
+                    "name": "Whatever It Is Really Called",
+                    "alternative_names": [{"name": "Alt Named Game"}],
+                    "multiplayer_modes": [
+                        {"platform": 130, "lancoop": True},
+                    ],
+                }]
+            return [
+                {
+                    "id": 10,
+                    "name": "Overcooked! 2",
+                    "multiplayer_modes": [
+                        {"platform": 130, "splitscreen": True,
+                         "offlinecoop": True, "onlinemax": 4},
+                    ],
+                },
+                {"id": 20, "name": "Twin Release",
+                 "multiplayer_modes": [{"platform": 130, "splitscreen": True}]},
+                {"id": 21, "name": "Twin Release",
+                 "multiplayer_modes": [{"platform": 130, "onlinecoop": True}]},
+            ]
+
+        cache, stats = build_index.refresh_igdb_cache(
+            entries, build_index._empty_igdb_cache(),
+            client_id="id", client_secret="secret", query=fake_query,
+        )
+
+        self.assertEqual(
+            cache["entries"]["0100000000001000"]["modes"],
+            ["split", "coop", "online"],
+        )
+        self.assertEqual(cache["entries"]["0100000000004000"]["modes"], ["lan"])
+        # Two IGDB games answer to one name: never published, always reported.
+        self.assertEqual(
+            cache["misses"]["0100000000002000"]["reason"], "ambiguous"
+        )
+        self.assertEqual(cache["misses"]["0100000000003000"]["reason"], "none")
+        self.assertEqual(stats["igdbMatched"], 2)
+        self.assertEqual(stats["igdbAmbiguous"], 1)
+        # Batched: one request per pass, not one per title.
+        self.assertEqual(len(calls), 2)
+
+        # A second run re-uses the cache and asks IGDB nothing.
+        cache, stats = build_index.refresh_igdb_cache(
+            entries, cache, client_id="id", client_secret="secret",
+            query=fake_query,
+        )
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(stats["igdbFetched"], 0)
+
+    def test_igdb_fetch_limit_defers_the_rest(self):
+        entries = [
+            {"titleId": f"010000000000{index}000", "name": f"Game {index}"}
+            for index in range(1, 5)
+        ]
+
+        def fake_query(body):
+            return []
+
+        cache, stats = build_index.refresh_igdb_cache(
+            entries, build_index._empty_igdb_cache(), client_id="id",
+            client_secret="secret", fetch_limit=2, query=fake_query,
+        )
+
+        self.assertTrue(stats["igdbFetchLimitReached"])
+        # Only the titles inside the budget are recorded as checked; the rest
+        # stay unknown so the next run picks them up.
+        self.assertEqual(len(cache["misses"]), 2)
+
+    def test_igdb_modes_are_stamped_only_when_igdb_described_them(self):
+        entries = [
+            {"titleId": "0100000000001000", "name": "Described"},
+            {"titleId": "0100000000002000", "name": "Known but silent"},
+            {"titleId": "0100000000003000", "name": "Unmatched"},
+        ]
+        cache = {
+            "schemaVersion": 1,
+            "entries": {
+                "0100000000001000": {"igdbId": 1, "igdbName": "Described",
+                                     "modes": ["split"],
+                                     "platformSource": "130"},
+                "0100000000002000": {"igdbId": 2, "igdbName": "Silent",
+                                     "modes": [], "platformSource": "none"},
+            },
+            "misses": {},
+        }
+
+        stamped = build_index.apply_igdb_modes(entries, cache)
+
+        self.assertEqual(stamped, 1)
+        self.assertEqual(entries[0]["modes"], ["split"])
+        # IGDB knows the game but never described its modes: leaving the key
+        # off keeps the client's titledb player-count fallback alive.
+        self.assertNotIn("modes", entries[1])
+        self.assertNotIn("modes", entries[2])
+
+    def test_output_validation_rejects_invalid_modes(self):
+        def entry(modes):
+            return [
+                {
+                    "infoHash": "A" * 40,
+                    "titleId": "0100000000001000",
+                    "name": "Game",
+                    "iconUrl": build_index.ESHOP_IMAGE_PREFIX + "i/icon.jpg",
+                    "modes": modes,
+                }
+            ]
+
+        for modes in ("split", ["couch"], ["split", "split"]):
+            with self.subTest(modes=modes):
+                with self.assertRaises(ValueError):
+                    build_index.validate_entries(entry(modes))
+        build_index.validate_entries(entry([]))
+        build_index.validate_entries(entry(["split", "coop", "lan", "online"]))
+
     def test_output_validation_rejects_non_eshop_icon(self):
         entries = [
             {
