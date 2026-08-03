@@ -582,6 +582,72 @@ class BuildIndexTests(unittest.TestCase):
                     titledb_commit="titledb-sha",
                 )
 
+    def test_latest_version_from_v_tags(self):
+        self.assertIsNone(build_index._latest_title_version_from_files(None))
+        self.assertIsNone(build_index._latest_title_version_from_files([]))
+        self.assertIsNone(
+            build_index._latest_title_version_from_files(
+                [{"path": "Game [0100000000001000][ENG].nsp", "size": 1}]
+            )
+        )
+        self.assertEqual(
+            build_index._latest_title_version_from_files(
+                [
+                    {
+                        "path": "Game [0100000000001000][v0].nsp",
+                        "size": 10,
+                    },
+                    {
+                        "path": "Game [0100000000001800][v131072].nsp",
+                        "size": 4,
+                    },
+                ]
+            ),
+            131072,
+        )
+        # Case-insensitive tag, larger value wins regardless of order.
+        self.assertEqual(
+            build_index._latest_title_version_from_files(
+                [
+                    {"path": "Game [0100000000001800][V196608].nsp"},
+                    {"path": "Game [0100000000001000][v65536].nsp"},
+                ]
+            ),
+            196608,
+        )
+
+    def test_metadata_record_carries_latest_version(self):
+        langegen = [game("Game [NSP][ENG]", "A", 1)]
+        titledb = {"1": title("0100000000001000", "Game")}
+        filelists = filelists_for(
+            (
+                1,
+                "A",
+                [
+                    {"path": "Game [0100000000001000][v0].nsp", "size": 10},
+                    {"path": "Game [0100000000001800][v131072].nsp", "size": 4},
+                ],
+            ),
+        )
+        entries, report = build_index.build_index(
+            langegen, titledb, {}, filelists
+        )
+        self.assertEqual(report["matched"], 1)
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["latestVersion"], "131072")
+
+    def test_metadata_record_omits_latest_version_without_tags(self):
+        langegen = [game("Game [NSP][ENG]", "A", 1)]
+        titledb = {"1": title("0100000000001000", "Game")}
+        filelists = filelists_for(
+            (1, "A", [{"path": "Game [0100000000001000][ENG].nsp", "size": 10}]),
+        )
+        entries, report = build_index.build_index(
+            langegen, titledb, {}, filelists
+        )
+        self.assertEqual(report["matched"], 1)
+        self.assertNotIn("latestVersion", entries[0])
+
 
 if __name__ == "__main__":
     unittest.main()

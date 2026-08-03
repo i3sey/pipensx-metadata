@@ -743,13 +743,20 @@ def apply_igdb_modes(entries: list[dict[str, Any]],
 
 
 def _metadata_record(info_hash: str, source_title: str, method: str,
-                     record: dict[str, Any]) -> dict[str, Any]:
+                     record: dict[str, Any],
+                     latest_version: int | None = None) -> dict[str, Any]:
     result: dict[str, Any] = {
         "infoHash": info_hash,
         "titleId": record["id"].upper(),
         "match": f"{method}:{normalize_title(source_title)}",
         "name": record["name"],
     }
+    if latest_version is not None:
+        # Decimal CNMT title version of the newest update bundled in the
+        # release, from the [vN] file tags. Optional like `players`: an index
+        # without the field predates the game-update check, and a release
+        # whose files carry no tag simply has no version.
+        result["latestVersion"] = str(latest_version)
     scalar_fields = (
         "intro",
         "description",
@@ -782,6 +789,35 @@ def _metadata_record(info_hash: str, source_title: str, method: str,
             and 0 < players <= MAX_PLAYERS:
         result["players"] = players
     return result
+
+
+_VERSION_TAG = re.compile(r"\[v(\d+)\]", re.IGNORECASE)
+
+
+def _latest_title_version_from_files(files: Any) -> int | None:
+    """Max [vN] tag across a release's file paths, or None when no file
+    carries one.
+
+    Scene releases tag each package with its CNMT title version: the base
+    game ships as [v0] and the bundled update as, e.g., [v131072]
+    ("Game [0100...6800][v131072].nsp"). The client compares this against
+    the installed Patch content-meta version, so the tag must come from the
+    same numbering — CNMT title version, not a display string.
+    """
+    best: int | None = None
+    if isinstance(files, list):
+        for item in files:
+            path = item.get("path") if isinstance(item, dict) else None
+            if not isinstance(path, str):
+                continue
+            for match in _VERSION_TAG.finditer(path):
+                try:
+                    value = int(match.group(1))
+                except ValueError:
+                    continue
+                if best is None or value > best:
+                    best = value
+    return best
 
 
 def _title_id_candidates_from_files(
@@ -898,17 +934,21 @@ def build_index(
         title = str(game.get("title", ""))
         selected: str | None = None
         method: str | None = None
+        latest_version: int | None = None
 
         override = str(overrides.get(topic_id, "")).upper()
         if override in by_id:
             selected, method = override, "override"
 
-        if selected is None:
-            cached_filelist = filelist_entries.get(
-                filelist_cache_key(topic_id, info_hash)
+        cached_filelist = filelist_entries.get(
+            filelist_cache_key(topic_id, info_hash)
+        )
+        if (isinstance(cached_filelist, dict) and
+                cached_filelist.get("infoHash") == info_hash):
+            latest_version = _latest_title_version_from_files(
+                cached_filelist.get("files")
             )
-            if (isinstance(cached_filelist, dict) and
-                    cached_filelist.get("infoHash") == info_hash):
+            if selected is None:
                 candidates = _title_id_candidates_from_files(
                     cached_filelist.get("files"), by_id
                 )
@@ -949,7 +989,8 @@ def build_index(
             unmatched.append({"topicId": topic_id, "title": title})
             continue
         methods[method] += 1
-        entries.append(_metadata_record(info_hash, title, method, by_id[selected]))
+        entries.append(_metadata_record(info_hash, title, method,
+                                        by_id[selected], latest_version))
 
     entries.sort(key=lambda item: item["infoHash"])
     fuzzy_suggestions: list[dict[str, Any]] = []
