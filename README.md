@@ -37,12 +37,14 @@ titles carry mode rows upstream, so that fallback is what keeps the client's
 
 Matching is deliberately conservative: topic overrides, Title IDs extracted
 from RuTracker file names, then embedded base Title IDs in the release text,
-then the catalogue `title_id` field, then a unique exact normalised name.
-If a file list contains multiple base Title IDs, the largest parsed file set
-wins; equal or unknown sizes stay ambiguous unless the catalogue `title_id`
-is in titledb, or one bundled game's name clearly matches the release title
-(bonus / pre-order entries are ignored). Transformed and fuzzy name matches
-are reported as suggestions only and are never published automatically.
+then the catalogue `title_id` field, then a unique exact normalised name,
+then a unique US eShop Algolia name match for unmatched catalogue title ids
+(`assets.nintendo.com` square art). If a file list contains multiple base
+Title IDs, the largest parsed file set wins; equal or unknown sizes stay
+ambiguous unless the catalogue `title_id` is in titledb, or one bundled
+game's name clearly matches the release title (bonus / pre-order entries
+are ignored). Transformed and fuzzy name matches are reported as
+suggestions only and are never published automatically.
 
 ## Local build
 

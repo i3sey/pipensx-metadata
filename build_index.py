@@ -31,6 +31,7 @@ TITLE_ID_RE = re.compile(r"^[0-9A-F]{16}$")
 TITLE_ID_ANYWHERE_RE = re.compile(r"\b0100[0-9A-Fa-f]{12}\b")
 INFO_HASH_RE = re.compile(r"^[0-9A-F]{40}$")
 ESHOP_IMAGE_PREFIX = "https://img-eshop.cdn.nintendo.net/"
+NINTENDO_ASSET_PREFIX = "https://assets.nintendo.com/"
 # Largest sane titledb numberOfPlayers; the biggest real value is 20.
 MAX_PLAYERS = 64
 SIZE_RE = re.compile(
@@ -91,6 +92,78 @@ def catalog_base_title_id(game: dict[str, Any]) -> str | None:
     if raw is None or raw == "":
         raw = game.get("titleId")
     return base_title_id(raw)
+
+
+def is_allowed_icon_url(url: Any) -> bool:
+    return isinstance(url, str) and (
+        url.startswith(ESHOP_IMAGE_PREFIX) or
+        url.startswith(NINTENDO_ASSET_PREFIX)
+    )
+
+
+ALGOLIA_APP_ID = "U3B6GR4UA3"
+ALGOLIA_API_KEY = "a29c6927638bfd8cee23993e51e721c9"
+ALGOLIA_URL = (
+    f"https://{ALGOLIA_APP_ID.lower()}-dsn.algolia.net/1/indexes/"
+    "store_game_en_us_release_des/query"
+)
+
+
+def _algolia_query(title: str, timeout_seconds: float = 15.0) -> list[dict[str, Any]]:
+    query = normalize_title(title)
+    if len(query) < 4:
+        return []
+    body = json.dumps({
+        "params": urllib.parse.urlencode({
+            "query": query,
+            "hitsPerPage": 5,
+        }),
+    }).encode()
+    request = urllib.request.Request(
+        ALGOLIA_URL,
+        data=body,
+        headers={
+            "User-Agent": "pipensx-metadata/1",
+            "Content-Type": "application/json",
+            "x-algolia-api-key": ALGOLIA_API_KEY,
+            "x-algolia-application-id": ALGOLIA_APP_ID,
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+            payload = json.load(response)
+    except (OSError, ValueError):
+        return []
+    hits = payload.get("hits") if isinstance(payload, dict) else None
+    if not isinstance(hits, list):
+        return []
+    return [hit for hit in hits if isinstance(hit, dict)]
+
+
+def _algolia_exact_icon(
+    title: str,
+    search: Any,
+) -> dict[str, str] | None:
+    query = normalize_title(title)
+    hits = search(title)
+    matched: list[dict[str, str]] = []
+    for hit in hits:
+        name = hit.get("title")
+        icon = hit.get("productImageSquare")
+        platform = str(hit.get("platformCode") or hit.get("platform") or "")
+        if not isinstance(name, str) or not name:
+            continue
+        if normalize_title(name) != query:
+            continue
+        if "SWITCH" not in platform.upper():
+            continue
+        if not isinstance(icon, str) or not icon.startswith(NINTENDO_ASSET_PREFIX):
+            continue
+        matched.append({"name": name, "iconUrl": icon})
+    if len(matched) != 1:
+        return None
+    return matched[0]
 
 
 def normalize_title(value: Any) -> str:
@@ -923,6 +996,7 @@ def build_index(
     overrides: dict[str, str],
     filelists: dict[str, Any] | None = None,
     filelist_stats: dict[str, Any] | None = None,
+    algolia_search: Any = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     by_id: dict[str, dict[str, Any]] = {}
     by_name: dict[str, list[str]] = defaultdict(list)
@@ -961,6 +1035,7 @@ def build_index(
         "catalog_title_id": 0,
         "exact": 0,
         "transformed": 0,
+        "algolia": 0,
     }
     entries: list[dict[str, Any]] = []
     unmatched: list[dict[str, Any]] = []
@@ -1054,12 +1129,31 @@ def build_index(
             if len(exact_ids) == 1:
                 selected, method = exact_ids[0], "exact"
 
+        algolia_hit: dict[str, str] | None = None
+        if selected is None and algolia_search is not None:
+            catalog_id = catalog_base_title_id(game)
+            if catalog_id:
+                algolia_hit = _algolia_exact_icon(title, algolia_search)
+                if algolia_hit:
+                    selected, method = catalog_id, "algolia"
+
         if selected is None or method is None:
             unmatched.append({"topicId": topic_id, "title": title})
             continue
         methods[method] += 1
-        entries.append(_metadata_record(info_hash, title, method,
-                                        by_id[selected], latest_version))
+        if algolia_hit:
+            record = {
+                "id": selected,
+                "name": algolia_hit["name"],
+                "iconUrl": algolia_hit["iconUrl"],
+            }
+            entries.append(_metadata_record(
+                info_hash, title, method, record, latest_version,
+            ))
+        else:
+            entries.append(_metadata_record(
+                info_hash, title, method, by_id[selected], latest_version,
+            ))
 
     entries.sort(key=lambda item: item["infoHash"])
     fuzzy_suggestions: list[dict[str, Any]] = []
@@ -1182,7 +1276,7 @@ def validate_entries(entries: list[dict[str, Any]]) -> None:
             raise ValueError(f"entry {index} has an invalid base titleId")
         if not isinstance(name, str) or not name:
             raise ValueError(f"entry {index} has an empty name")
-        if not isinstance(icon_url, str) or not icon_url.startswith(ESHOP_IMAGE_PREFIX):
+        if not isinstance(icon_url, str) or not is_allowed_icon_url(icon_url):
             raise ValueError(f"entry {index} has a non-eShop iconUrl")
         if "players" in item:
             players = item["players"]
@@ -1323,6 +1417,7 @@ def main() -> None:
     # time, so the first seed still completes in a handful of runs.
     parser.add_argument("--igdb-fetch-limit", type=int, default=1200)
     parser.add_argument("--igdb-fetch-timeout-seconds", type=float, default=60)
+    parser.add_argument("--no-algolia", action="store_true")
     args = parser.parse_args()
 
     overrides_path = Path(args.overrides)
@@ -1356,8 +1451,10 @@ def main() -> None:
         )
     if args.require_filelists and not filelists["entries"]:
         raise SystemExit("no RuTracker file lists are available")
-    entries, report = build_index(langegen, titledb, overrides,
-                                  filelists, filelist_stats)
+    entries, report = build_index(
+        langegen, titledb, overrides, filelists, filelist_stats,
+        algolia_search=None if args.no_algolia else _algolia_query,
+    )
     if args.cache_only_on_fetch_limit and report["fileListFetchLimitReached"]:
         write_cache_outputs(Path(args.output), filelists, report)
         print(

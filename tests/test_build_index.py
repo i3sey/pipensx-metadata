@@ -246,6 +246,70 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(entries[0]["titleId"], "0100000000001000")
         self.assertEqual(report["methods"]["catalog_title_id"], 1)
 
+    def test_algolia_fills_unmatched_catalog_title_id(self):
+        row = game("Tyrant's Realm [NSP][RUS/Multi11]", "2", 101)
+        row["title_id"] = "0100852026502000"
+        titledb = {
+            "1": title("0100000000001000", "Unrelated"),
+        }
+        icon = (
+            "https://assets.nintendo.com/image/upload/q_auto/f_auto/"
+            "store/software/switch/70010000113438/icon.jpg"
+        )
+        calls = []
+
+        def fake_search(title):
+            calls.append(title)
+            return [{
+                "title": "Tyrant's Realm",
+                "platformCode": "NINTENDO_SWITCH",
+                "productImageSquare": icon,
+            }]
+
+        entries, report = build_index.build_index(
+            [row], titledb, {}, algolia_search=fake_search,
+        )
+
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(entries[0]["titleId"], "0100852026502000")
+        self.assertEqual(entries[0]["name"], "Tyrant's Realm")
+        self.assertEqual(entries[0]["iconUrl"], icon)
+        self.assertEqual(report["methods"]["algolia"], 1)
+        self.assertTrue(entries[0]["match"].startswith("algolia:"))
+
+    def test_algolia_skips_without_catalog_title_id(self):
+        row = game("Tyrant's Realm [NSP]", "2", 101)
+        titledb = {"1": title("0100000000001000", "Unrelated")}
+
+        def fake_search(title):
+            raise AssertionError("algolia should not run without a title id")
+
+        entries, report = build_index.build_index(
+            [row], titledb, {}, algolia_search=fake_search,
+        )
+        self.assertEqual(entries, [])
+        self.assertEqual(report["methods"]["algolia"], 0)
+
+    def test_algolia_skips_ambiguous_store_hits(self):
+        row = game("Shared [NSP]", "2", 101)
+        row["title_id"] = "0100852026502000"
+        titledb = {"1": title("0100000000001000", "Unrelated")}
+        icon = "https://assets.nintendo.com/image/upload/icon.jpg"
+
+        def fake_search(title):
+            return [
+                {"title": "Shared", "platformCode": "NINTENDO_SWITCH",
+                 "productImageSquare": icon},
+                {"title": "Shared", "platformCode": "NINTENDO_SWITCH",
+                 "productImageSquare": icon + "2"},
+            ]
+
+        entries, report = build_index.build_index(
+            [row], titledb, {}, algolia_search=fake_search,
+        )
+        self.assertEqual(entries, [])
+        self.assertEqual(report["methods"]["algolia"], 0)
+
     def test_unique_exact_name_publishes(self):
         langegen = [game("Exact Game [NSZ][ENG]", "2", 101)]
         titledb = {
@@ -654,6 +718,24 @@ class BuildIndexTests(unittest.TestCase):
                     build_index.validate_entries(entry(modes))
         build_index.validate_entries(entry([]))
         build_index.validate_entries(entry(["split", "coop", "lan", "online"]))
+
+    def test_output_validation_accepts_nintendo_store_icon(self):
+        entries = [
+            {
+                "infoHash": "A" * 40,
+                "titleId": "0100000000001000",
+                "name": "Game",
+                "iconUrl": "https://assets.nintendo.com/image/upload/icon.jpg",
+            }
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            build_index.write_outputs(
+                Path(directory),
+                entries,
+                {"matched": 1, "coverage": 1.0},
+                langegen_commit="langegen-sha",
+                titledb_commit="titledb-sha",
+            )
 
     def test_output_validation_rejects_non_eshop_icon(self):
         entries = [
