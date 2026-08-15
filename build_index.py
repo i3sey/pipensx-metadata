@@ -972,10 +972,9 @@ def build_index(
                         method = "file_title_id_largest"
                     else:
                         catalog_id = catalog_base_title_id(game)
-                        candidate_ids = {
-                            item["titleId"] for item in candidates
-                        }
-                        if catalog_id in candidate_ids:
+                        # Collection dumps list the bundled games, not the
+                        # wrapper title id Langegen tagged.
+                        if catalog_id in by_id:
                             selected, method = catalog_id, "catalog_title_id"
                         else:
                             ambiguous_rows.append({
@@ -993,7 +992,7 @@ def build_index(
                 selected, method = next(iter(direct)), "title_id"
             elif len(direct) > 1:
                 catalog_id = catalog_base_title_id(game)
-                if catalog_id in direct:
+                if catalog_id in by_id:
                     selected, method = catalog_id, "catalog_title_id"
                 else:
                     ambiguous_rows.append({

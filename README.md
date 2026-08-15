@@ -40,7 +40,8 @@ from RuTracker file names, then embedded base Title IDs in the release text,
 then the catalogue `title_id` field, then a unique exact normalised name.
 If a file list contains multiple base Title IDs, the largest parsed file set
 wins; equal or unknown sizes stay ambiguous unless the catalogue `title_id`
-names one of those candidates. Transformed and fuzzy name matches are
+is in titledb (including a collection wrapper that is not itself in the
+file list). Transformed and fuzzy name matches are
 reported as suggestions only and are never published automatically.
 
 ## Local build

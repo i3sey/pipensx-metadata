@@ -154,6 +154,28 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(report["methods"]["catalog_title_id"], 1)
         self.assertEqual(report["ambiguous"], 0)
 
+    def test_catalog_title_id_wins_collection_not_in_filelist(self):
+        row = game("Master Collection Vol. 1 [NSZ]", "E", 5)
+        row["title_id"] = "0100000000003000"
+        titledb = {
+            "1": title("0100000000001000", "First Game"),
+            "2": title("0100000000002000", "Second Game"),
+            "3": title("0100000000003000", "Master Collection"),
+        }
+        filelists = filelists_for(
+            (5, "E", [
+                {"path": "First Game [0100000000001000].nsp", "size": 100},
+                {"path": "Second Game [0100000000002000].nsp", "size": 100},
+            ])
+        )
+
+        entries, report = build_index.build_index([row], titledb, {}, filelists)
+
+        self.assertEqual(entries[0]["titleId"], "0100000000003000")
+        self.assertEqual(entries[0]["name"], "Master Collection")
+        self.assertEqual(report["methods"]["catalog_title_id"], 1)
+        self.assertEqual(report["ambiguous"], 0)
+
     def test_manual_topic_override_wins(self):
         langegen = [game("Unrelated release name [NSZ]", "F", 99)]
         titledb = {
