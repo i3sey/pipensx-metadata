@@ -36,10 +36,12 @@ titles carry mode rows upstream, so that fallback is what keeps the client's
 "local co-op" filter useful.
 
 Matching is deliberately conservative: topic overrides, Title IDs extracted
-from RuTracker file names, then embedded base Title IDs in the release text.
+from RuTracker file names, then embedded base Title IDs in the release text,
+then the catalogue `title_id` field, then a unique exact normalised name.
 If a file list contains multiple base Title IDs, the largest parsed file set
-wins; equal or unknown sizes stay ambiguous. Name matches are reported as
-suggestions only and are never published automatically.
+wins; equal or unknown sizes stay ambiguous unless the catalogue `title_id`
+names one of those candidates. Transformed and fuzzy name matches are
+reported as suggestions only and are never published automatically.
 
 ## Local build
 

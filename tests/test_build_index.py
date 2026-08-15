@@ -134,6 +134,26 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(report["ambiguousRows"][0]["stage"], "file_title_id")
         self.assertEqual(len(report["multiTitleIdRows"]), 1)
 
+    def test_catalog_title_id_breaks_equal_filelist_sizes(self):
+        row = game("Bundle [NSZ]", "E", 5)
+        row["title_id"] = "0100000000002000"
+        titledb = {
+            "1": title("0100000000001000", "First Game"),
+            "2": title("0100000000002000", "Second Game"),
+        }
+        filelists = filelists_for(
+            (5, "E", [
+                {"path": "First Game [0100000000001000].nsp", "size": 100},
+                {"path": "Second Game [0100000000002000].nsp", "size": 100},
+            ])
+        )
+
+        entries, report = build_index.build_index([row], titledb, {}, filelists)
+
+        self.assertEqual(entries[0]["titleId"], "0100000000002000")
+        self.assertEqual(report["methods"]["catalog_title_id"], 1)
+        self.assertEqual(report["ambiguous"], 0)
+
     def test_manual_topic_override_wins(self):
         langegen = [game("Unrelated release name [NSZ]", "F", 99)]
         titledb = {
@@ -162,7 +182,19 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(entries[0]["titleId"], "0100000000001000")
         self.assertEqual(report["methods"]["title_id"], 1)
 
-    def test_name_matches_are_only_report_suggestions(self):
+    def test_catalog_title_id_publishes_without_filelist(self):
+        row = game("Whatever dump [NSZ]", "2", 101)
+        row["title_id"] = "0100000000001800"
+        titledb = {
+            "1": title("0100000000001000", "Some Game"),
+        }
+
+        entries, report = build_index.build_index([row], titledb, {})
+
+        self.assertEqual(entries[0]["titleId"], "0100000000001000")
+        self.assertEqual(report["methods"]["catalog_title_id"], 1)
+
+    def test_unique_exact_name_publishes(self):
         langegen = [game("Exact Game [NSZ][ENG]", "2", 101)]
         titledb = {
             "1": title("0100000000001000", "Exact Game"),
@@ -170,14 +202,22 @@ class BuildIndexTests(unittest.TestCase):
 
         entries, report = build_index.build_index(langegen, titledb, {})
 
+        self.assertEqual(entries[0]["titleId"], "0100000000001000")
+        self.assertEqual(report["methods"]["exact"], 1)
+        self.assertEqual(report["fuzzySuggestions"], [])
+
+    def test_duplicate_exact_names_stay_unpublished(self):
+        langegen = [game("Shared Name [NSZ]", "2", 101)]
+        titledb = {
+            "1": title("0100000000001000", "Shared Name"),
+            "2": title("0100000000002000", "Shared Name"),
+        }
+
+        entries, report = build_index.build_index(langegen, titledb, {})
+
         self.assertEqual(entries, [])
         self.assertEqual(report["methods"]["exact"], 0)
         self.assertEqual(report["fuzzySuggestions"][0]["topicId"], "101")
-        self.assertEqual(
-            report["fuzzySuggestions"][0]["candidates"][0]["titleId"],
-            "0100000000001000",
-        )
-        self.assertEqual(report["fuzzySuggestions"][0]["candidates"][0]["method"], "exact")
 
     def test_transformed_name_matches_are_only_report_suggestions(self):
         langegen = [game("First Game / Second Game [NSP][ENG]", "4", 103)]

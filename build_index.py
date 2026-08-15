@@ -86,6 +86,13 @@ def title_ids_from_text(value: Any) -> set[str]:
     return result
 
 
+def catalog_base_title_id(game: dict[str, Any]) -> str | None:
+    raw = game.get("title_id")
+    if raw is None or raw == "":
+        raw = game.get("titleId")
+    return base_title_id(raw)
+
+
 def normalize_title(value: Any) -> str:
     text = unicodedata.normalize("NFKD", str(value or ""))
     text = re.sub(r"\[[^]]*]", " ", text)
@@ -914,6 +921,7 @@ def build_index(
         "override": 0,
         "file_title_id_largest": 0,
         "title_id": 0,
+        "catalog_title_id": 0,
         "exact": 0,
         "transformed": 0,
     }
@@ -963,12 +971,19 @@ def build_index(
                     if selected:
                         method = "file_title_id_largest"
                     else:
-                        ambiguous_rows.append({
-                            **row,
-                            "stage": "file_title_id",
-                        })
-                        multi_title_id_rows.append(row)
-                        continue
+                        catalog_id = catalog_base_title_id(game)
+                        candidate_ids = {
+                            item["titleId"] for item in candidates
+                        }
+                        if catalog_id in candidate_ids:
+                            selected, method = catalog_id, "catalog_title_id"
+                        else:
+                            ambiguous_rows.append({
+                                **row,
+                                "stage": "file_title_id",
+                            })
+                            multi_title_id_rows.append(row)
+                            continue
 
         if selected is None:
             text = title + "\n" + str(game.get("description", ""))
@@ -977,13 +992,27 @@ def build_index(
             if len(direct) == 1:
                 selected, method = next(iter(direct)), "title_id"
             elif len(direct) > 1:
-                ambiguous_rows.append({
-                    "topicId": topic_id,
-                    "title": title,
-                    "candidates": sorted(direct),
-                    "stage": "title_id",
-                })
-                continue
+                catalog_id = catalog_base_title_id(game)
+                if catalog_id in direct:
+                    selected, method = catalog_id, "catalog_title_id"
+                else:
+                    ambiguous_rows.append({
+                        "topicId": topic_id,
+                        "title": title,
+                        "candidates": sorted(direct),
+                        "stage": "title_id",
+                    })
+                    continue
+
+        if selected is None:
+            catalog_id = catalog_base_title_id(game)
+            if catalog_id in by_id:
+                selected, method = catalog_id, "catalog_title_id"
+
+        if selected is None:
+            exact_ids = by_name.get(normalize_title(title), [])
+            if len(exact_ids) == 1:
+                selected, method = exact_ids[0], "exact"
 
         if selected is None or method is None:
             unmatched.append({"topicId": topic_id, "title": title})
