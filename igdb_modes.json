@@ -1735,7 +1735,7 @@
    "platformSource": "none"
   },
   "01000D3013E8C000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 130748,
    "igdbName": "SpongeBob: Krusty Cook-Off",
    "modes": [],
@@ -2196,7 +2196,7 @@
    "platformSource": "none"
   },
   "0100103011894000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 150502,
    "igdbName": "Naught",
    "modes": [],
@@ -3242,7 +3242,7 @@
    "platformSource": "agnostic"
   },
   "010016D02485C000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 325283,
    "igdbName": "Blippo+",
    "modes": [],
@@ -3839,7 +3839,7 @@
    "platformSource": "none"
   },
   "01001AC00ED72000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 196874,
    "igdbName": "If My Heart Had Wings",
    "modes": [],
@@ -4925,7 +4925,7 @@
    "platformSource": "none"
   },
   "010022801242C000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 136255,
    "igdbName": "KukkoroDays",
    "modes": [],
@@ -7080,7 +7080,7 @@
    "platformSource": "any"
   },
   "01003030161DC000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 175809,
    "igdbName": "Monomals",
    "modes": [],
@@ -8847,7 +8847,7 @@
    "platformSource": "none"
   },
   "01003AC017294000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 278476,
    "igdbName": "Valis: The Fantasm Soldier",
    "modes": [],
@@ -9740,7 +9740,7 @@
    "platformSource": "none"
   },
   "0100416004C00000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 76217,
    "igdbName": "Doom",
    "modes": [],
@@ -10721,7 +10721,7 @@
    "platformSource": "none"
   },
   "010047B010260000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 103725,
    "igdbName": "Space Pioneer",
    "modes": [],
@@ -10909,7 +10909,7 @@
    "platformSource": "none"
   },
   "010048F0195E8000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 261085,
    "igdbName": "Quake II",
    "modes": [],
@@ -11099,6 +11099,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "01004A101F3F6000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 284906,
+   "igdbName": "Helix: Descent N Ascent",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01004A1020A60000": {
    "fetchedAt": "2026-08-15T09:11:34Z",
    "igdbId": 320021,
@@ -11257,6 +11264,13 @@
    "fetchedAt": "2026-07-25T15:41:48Z",
    "igdbId": 305178,
    "igdbName": "Tempopo",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "01004B3023346000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 332281,
+   "igdbName": "Dice People",
    "modes": [],
    "platformSource": "none"
   },
@@ -12129,6 +12143,13 @@
    "fetchedAt": "2026-07-25T15:41:15Z",
    "igdbId": 119190,
    "igdbName": "Bug Fables: The Everlasting Sapling",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "010051A025022000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 251915,
+   "igdbName": "High Times",
    "modes": [],
    "platformSource": "none"
   },
@@ -13592,7 +13613,7 @@
    "platformSource": "none"
   },
   "01005B301F29E000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 295314,
    "igdbName": "Castaway",
    "modes": [],
@@ -13951,7 +13972,7 @@
    "platformSource": "agnostic"
   },
   "01005E7013476000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 197833,
    "igdbName": "Mad Father",
    "modes": [],
@@ -15059,6 +15080,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100649028684000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 202559,
+   "igdbName": "Twofold",
+   "modes": [],
+   "platformSource": "none"
+  },
   "010064B00B95C000": {
    "fetchedAt": "2026-07-25T15:41:49Z",
    "igdbId": 82370,
@@ -15147,7 +15175,7 @@
    "platformSource": "none"
   },
   "01006560184E6000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 239392,
    "igdbName": "Mortal Kombat 1",
    "modes": [],
@@ -15689,6 +15717,13 @@
    "fetchedAt": "2026-08-15T10:08:07Z",
    "igdbId": 157445,
    "igdbName": "Thief Simulator 2",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "010068B026CF2000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 342916,
+   "igdbName": "Flamecraft",
    "modes": [],
    "platformSource": "none"
   },
@@ -17548,6 +17583,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "010074B027F44000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 374967,
+   "igdbName": "Grayland Remastered",
+   "modes": [],
+   "platformSource": "none"
+  },
   "010074D0111C4000": {
    "fetchedAt": "2026-08-15T10:08:04Z",
    "igdbId": 131563,
@@ -18626,6 +18668,13 @@
    ],
    "platformSource": "any"
   },
+  "01007BF026AFC000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 343652,
+   "igdbName": "Kugayama Shiori's Death Diary",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01007C000C314000": {
    "fetchedAt": "2026-08-15T10:08:09Z",
    "igdbId": 29777,
@@ -18724,6 +18773,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "01007CB025C58000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 164994,
+   "igdbName": "Volcano Princess",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01007CD014C52000": {
    "fetchedAt": "2026-07-25T15:41:22Z",
    "igdbId": 165839,
@@ -18797,6 +18853,13 @@
    "modes": [],
    "platformSource": "any"
   },
+  "01007D2027CBA000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 328013,
+   "igdbName": "Love, Internet, and Murder Magic",
+   "modes": [],
+   "platformSource": "none"
+  },
   "01007D4017740000": {
    "fetchedAt": "2026-07-25T15:41:35Z",
    "igdbId": 7635,
@@ -18826,7 +18889,7 @@
    "platformSource": "none"
   },
   "01007D901FF7C000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 304131,
    "igdbName": "Riviera: The Promised Land",
    "modes": [],
@@ -19900,6 +19963,13 @@
    "fetchedAt": "2026-08-15T10:08:01Z",
    "igdbId": 330236,
    "igdbName": "Christmas Tree: Holiday Decorate Simulator",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100852026502000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 177253,
+   "igdbName": "Tyrant's Realm",
    "modes": [],
    "platformSource": "none"
   },
@@ -21643,7 +21713,7 @@
    "platformSource": "none"
   },
   "0100901014412000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 147675,
    "igdbName": "From Shadows",
    "modes": [],
@@ -21879,6 +21949,13 @@
    "fetchedAt": "2026-07-25T15:41:22Z",
    "igdbId": 319322,
    "igdbName": "Dagon: Complete Edition",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100920027710000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 380436,
+   "igdbName": "Limbot",
    "modes": [],
    "platformSource": "none"
   },
@@ -22999,6 +23076,13 @@
    "fetchedAt": "2026-08-15T10:08:08Z",
    "igdbId": 133170,
    "igdbName": "Protodroid Delta",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "010099902841A000": {
+   "fetchedAt": "2026-08-15T10:30:50Z",
+   "igdbId": 362329,
+   "igdbName": "Bomcat",
    "modes": [],
    "platformSource": "none"
   },
@@ -26640,6 +26724,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100B11027658000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 394671,
+   "igdbName": "Defender of the Crown: The Legend Returns",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100B12017F0A000": {
    "fetchedAt": "2026-07-25T15:41:29Z",
    "igdbId": 194745,
@@ -27070,7 +27161,7 @@
    "platformSource": "agnostic"
   },
   "0100B410040F2000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 194216,
    "igdbName": "Dead Synchronicity: Tomorrow Comes Today",
    "modes": [],
@@ -30133,6 +30224,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100C7802833C000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 328027,
+   "igdbName": "Tower Dominion",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100C7C01F712000": {
    "fetchedAt": "2026-08-15T10:08:03Z",
    "igdbId": 309636,
@@ -30649,6 +30747,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100CBB027BA4000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 373021,
+   "igdbName": "Avatar Legends: The Fighting Game",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100CBC018546000": {
    "fetchedAt": "2026-08-15T10:11:43Z",
    "igdbId": 152091,
@@ -30771,6 +30876,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100CC60235E8000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 212671,
+   "igdbName": "Dad's Coming",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100CC7009196000": {
    "fetchedAt": "2026-08-15T10:11:42Z",
    "igdbId": 28286,
@@ -30884,7 +30996,7 @@
    "platformSource": "none"
   },
   "0100CD10266C2000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 112854,
    "igdbName": "Firework",
    "modes": [],
@@ -31034,6 +31146,13 @@
    "fetchedAt": "2026-08-15T10:11:43Z",
    "igdbId": 188255,
    "igdbName": "Rainbow Yggdrasil",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100CDF02813A000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 217203,
+   "igdbName": "Turnip Mountain",
    "modes": [],
    "platformSource": "none"
   },
@@ -32501,7 +32620,7 @@
    "platformSource": "none"
   },
   "0100D7800E9E0000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 119391,
    "igdbName": "Trials of Mana",
    "modes": [],
@@ -33991,6 +34110,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100E1F02727C000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 190106,
+   "igdbName": "Talespinner",
+   "modes": [],
+   "platformSource": "none"
+  },
   "0100E20012952000": {
    "fetchedAt": "2026-07-25T15:41:15Z",
    "igdbId": 136773,
@@ -35111,6 +35237,13 @@
    "fetchedAt": "2026-07-25T15:41:29Z",
    "igdbId": 112939,
    "igdbName": "Later Alligator",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100E8F026846000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 143446,
+   "igdbName": "Lost to Time",
    "modes": [],
    "platformSource": "none"
   },
@@ -36574,7 +36707,7 @@
    "platformSource": "none"
   },
   "0100F25022A30000": {
-   "fetchedAt": "2026-08-15T10:11:40Z",
+   "fetchedAt": "2026-08-15T10:30:49Z",
    "igdbId": 363998,
    "igdbName": "Ys Memoire: Revelations in Celceta",
    "modes": [],
@@ -36629,6 +36762,13 @@
    "igdbName": "Gorogoa",
    "modes": [],
    "platformSource": "none"
+  },
+  "0100F2B023A26000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 282826,
+   "igdbName": "The King is Watching",
+   "modes": [],
+   "platformSource": "any"
   },
   "0100F2C00F060000": {
    "fetchedAt": "2026-08-15T10:11:41Z",
@@ -37254,6 +37394,17 @@
    "modes": [],
    "platformSource": "none"
   },
+  "0100F7501198E000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 127077,
+   "igdbName": "Choppa: Rescue Rivals",
+   "modes": [
+    "split",
+    "coop",
+    "online"
+   ],
+   "platformSource": "agnostic"
+  },
   "0100F7501A2FE000": {
    "fetchedAt": "2026-08-15T10:11:45Z",
    "igdbId": 233872,
@@ -37557,6 +37708,13 @@
    "fetchedAt": "2026-07-25T15:41:16Z",
    "igdbId": 183648,
    "igdbName": "DC League of Super-Pets: The Adventures of Krypto and Ace",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "0100F960292C6000": {
+   "fetchedAt": "2026-08-15T10:30:49Z",
+   "igdbId": 411145,
+   "igdbName": "Pets Survivors",
    "modes": [],
    "platformSource": "none"
   },
@@ -39398,6 +39556,10 @@
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
   },
+  "010031B023C8A000": {
+   "checkedAt": "2026-08-15T10:30:48Z",
+   "reason": "none"
+  },
   "0100328013BCA000": {
    "checkedAt": "2026-08-15T09:11:30Z",
    "reason": "none"
@@ -40090,6 +40252,10 @@
    "checkedAt": "2026-08-15T09:11:30Z",
    "reason": "none"
   },
+  "01005460280CA000": {
+   "checkedAt": "2026-08-15T10:30:48Z",
+   "reason": "none"
+  },
   "010054E01D878000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -40332,6 +40498,10 @@
   },
   "010064C01A9BA000": {
    "checkedAt": "2026-07-25T15:41:10Z",
+   "reason": "none"
+  },
+  "010064C02639A000": {
+   "checkedAt": "2026-08-15T10:30:48Z",
    "reason": "none"
   },
   "0100650018FE0000": {
@@ -40942,6 +41112,10 @@
    "checkedAt": "2026-08-15T10:08:00Z",
    "reason": "none"
   },
+  "0100815028426000": {
+   "checkedAt": "2026-08-15T10:30:48Z",
+   "reason": "none"
+  },
   "01008180157AC000": {
    "checkedAt": "2026-08-15T10:08:00Z",
    "reason": "none"
@@ -41124,6 +41298,10 @@
   },
   "01008D300C50C000": {
    "checkedAt": "2026-07-25T15:41:10Z",
+   "reason": "none"
+  },
+  "01008D502626C000": {
+   "checkedAt": "2026-08-15T10:30:48Z",
    "reason": "none"
   },
   "01008D900B984000": {
@@ -42580,6 +42758,10 @@
   },
   "0100E1400BA96000": {
    "checkedAt": "2026-07-25T15:41:10Z",
+   "reason": "none"
+  },
+  "0100E1402792A000": {
+   "checkedAt": "2026-08-15T10:30:48Z",
    "reason": "none"
   },
   "0100E1800E202000": {
