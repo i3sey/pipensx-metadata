@@ -881,6 +881,42 @@ def _select_largest_title_id(candidates: list[dict[str, Any]]) -> str | None:
     return None
 
 
+def _is_extra_content(name: str) -> bool:
+    normalized = normalize_title(name)
+    tokens = set(normalized.split())
+    if "bonus" in tokens or "preorder" in tokens:
+        return True
+    if "pre order" in normalized or "language pack" in normalized:
+        return True
+    return False
+
+
+def _select_named_title_id(
+    candidates: list[dict[str, Any]], source_title: str,
+) -> str | None:
+    query = normalize_title(source_title)
+    if not query or len(candidates) < 2:
+        return None
+    scored: list[tuple[float, str]] = []
+    for candidate in candidates:
+        name = str(candidate.get("name", ""))
+        if _is_extra_content(name):
+            continue
+        score = difflib.SequenceMatcher(
+            None, query, normalize_title(name),
+        ).ratio()
+        scored.append((score, str(candidate["titleId"])))
+    if not scored:
+        return None
+    scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
+    best, title_id = scored[0]
+    if best < 0.5:
+        return None
+    if len(scored) > 1 and best - scored[1][0] < 0.02:
+        return None
+    return title_id
+
+
 def build_index(
     langegen: list[dict[str, Any]],
     titledb: dict[str, Any],
@@ -920,6 +956,7 @@ def build_index(
     methods = {
         "override": 0,
         "file_title_id_largest": 0,
+        "file_title_id_named": 0,
         "title_id": 0,
         "catalog_title_id": 0,
         "exact": 0,
@@ -977,12 +1014,16 @@ def build_index(
                         if catalog_id in by_id:
                             selected, method = catalog_id, "catalog_title_id"
                         else:
-                            ambiguous_rows.append({
-                                **row,
-                                "stage": "file_title_id",
-                            })
-                            multi_title_id_rows.append(row)
-                            continue
+                            named = _select_named_title_id(candidates, title)
+                            if named:
+                                selected, method = named, "file_title_id_named"
+                            else:
+                                ambiguous_rows.append({
+                                    **row,
+                                    "stage": "file_title_id",
+                                })
+                                multi_title_id_rows.append(row)
+                                continue
 
         if selected is None:
             text = title + "\n" + str(game.get("description", ""))

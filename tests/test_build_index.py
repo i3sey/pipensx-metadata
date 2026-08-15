@@ -176,6 +176,36 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(report["methods"]["catalog_title_id"], 1)
         self.assertEqual(report["ambiguous"], 0)
 
+    def test_named_filelist_title_id_picks_collection_game(self):
+        row = game(
+            "Metal Gear Solid: Master Collection Edition, Vol. 1 [NSZ]",
+            "E", 5,
+        )
+        titledb = {
+            "1": title("0100000000001000",
+                       "METAL GEAR SOLID 3: Snake Eater - Master Collection Version"),
+            "2": title("0100000000002000",
+                       "METAL GEAR SOLID: MASTER COLLECTION Vol.1 BONUS CONTENT"),
+            "3": title("0100000000003000",
+                       "Metal Gear & Metal Gear 2: Solid Snake"),
+            "4": title("0100000000004000",
+                       "METAL GEAR SOLID 2: Sons of Liberty - Master Collection Version"),
+        }
+        filelists = filelists_for(
+            (5, "E", [
+                {"path": "MGS3 [0100000000001000].nsp", "size": 100},
+                {"path": "Bonus [0100000000002000].nsp", "size": 100},
+                {"path": "MG [0100000000003000].nsp", "size": 100},
+                {"path": "MGS2 [0100000000004000].nsp", "size": 100},
+            ])
+        )
+
+        entries, report = build_index.build_index([row], titledb, {}, filelists)
+
+        self.assertEqual(entries[0]["titleId"], "0100000000001000")
+        self.assertEqual(report["methods"]["file_title_id_named"], 1)
+        self.assertEqual(report["ambiguous"], 0)
+
     def test_manual_topic_override_wins(self):
         langegen = [game("Unrelated release name [NSZ]", "F", 99)]
         titledb = {
