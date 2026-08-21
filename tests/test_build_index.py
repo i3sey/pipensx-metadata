@@ -97,25 +97,45 @@ class BuildIndexTests(unittest.TestCase):
         self.assertEqual(entries[0]["titleId"], "0100000000001000")
         self.assertEqual(entries[0]["iconUrl"], titledb["1"]["iconUrl"])
 
-    def test_largest_filelist_title_id_wins(self):
-        langegen = [game("Bundle [NSZ]", "D", 4)]
+    def test_combo_filelist_emits_one_row_per_title_id(self):
+        langegen = [game("Super Mario Galaxy + Super Mario Galaxy 2 [NSZ]", "D", 4)]
         titledb = {
-            "1": title("0100000000001000", "Small Game"),
-            "2": title("0100000000002000", "Large Game"),
+            "1": title("0100000000001000", "Super Mario Galaxy"),
+            "2": title("0100000000002000", "Super Mario Galaxy 2"),
         }
         filelists = filelists_for(
             (4, "D", [
-                {"path": "Small Game [0100000000001000].nsp", "size": 100},
-                {"path": "Large Game [0100000000002000].nsp", "size": 900},
+                {
+                    "path": "Super Mario Galaxy [0100000000001000][v0].nsp",
+                    "size": 3700,
+                },
+                {
+                    "path": "Super Mario Galaxy [0100000000001800][v131072].nsp",
+                    "size": 40,
+                },
+                {
+                    "path": "Super Mario Galaxy 2 [0100000000002000][v0].nsp",
+                    "size": 2600,
+                },
+                {
+                    "path": "Super Mario Galaxy 2 [0100000000002800][v327680].nsp",
+                    "size": 50,
+                },
             ])
         )
 
         entries, report = build_index.build_index(langegen, titledb, {}, filelists)
 
-        self.assertEqual(entries[0]["name"], "Large Game")
-        self.assertEqual(report["fileTitleIdMatches"], 1)
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(report["methods"]["file_title_id_split"], 2)
+        self.assertEqual(report["ambiguous"], 0)
+        by_id = {entry["titleId"]: entry for entry in entries}
+        self.assertEqual(by_id["0100000000001000"]["latestVersion"], "131072")
+        self.assertEqual(by_id["0100000000002000"]["latestVersion"], "327680")
+        self.assertEqual(by_id["0100000000001000"]["name"], "Super Mario Galaxy")
+        self.assertEqual(by_id["0100000000002000"]["name"], "Super Mario Galaxy 2")
 
-    def test_equal_filelist_title_id_sizes_are_ambiguous(self):
+    def test_equal_filelist_title_id_sizes_still_split(self):
         langegen = [game("Bundle [NSZ]", "E", 5)]
         titledb = {
             "1": title("0100000000001000", "First Game"),
@@ -130,11 +150,14 @@ class BuildIndexTests(unittest.TestCase):
 
         entries, report = build_index.build_index(langegen, titledb, {}, filelists)
 
-        self.assertEqual(entries, [])
-        self.assertEqual(report["ambiguousRows"][0]["stage"], "file_title_id")
-        self.assertEqual(len(report["multiTitleIdRows"]), 1)
+        self.assertEqual(
+            {entry["titleId"] for entry in entries},
+            {"0100000000001000", "0100000000002000"},
+        )
+        self.assertEqual(report["ambiguous"], 0)
+        self.assertEqual(report["methods"]["file_title_id_split"], 2)
 
-    def test_catalog_title_id_breaks_equal_filelist_sizes(self):
+    def test_catalog_title_id_does_not_collapse_filelist_bundle(self):
         row = game("Bundle [NSZ]", "E", 5)
         row["title_id"] = "0100000000002000"
         titledb = {
@@ -150,11 +173,11 @@ class BuildIndexTests(unittest.TestCase):
 
         entries, report = build_index.build_index([row], titledb, {}, filelists)
 
-        self.assertEqual(entries[0]["titleId"], "0100000000002000")
-        self.assertEqual(report["methods"]["catalog_title_id"], 1)
-        self.assertEqual(report["ambiguous"], 0)
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(report["methods"]["catalog_title_id"], 0)
+        self.assertEqual(report["methods"]["file_title_id_split"], 2)
 
-    def test_catalog_title_id_wins_collection_not_in_filelist(self):
+    def test_catalog_title_id_wrapper_does_not_hide_filelist_games(self):
         row = game("Master Collection Vol. 1 [NSZ]", "E", 5)
         row["title_id"] = "0100000000003000"
         titledb = {
@@ -171,12 +194,13 @@ class BuildIndexTests(unittest.TestCase):
 
         entries, report = build_index.build_index([row], titledb, {}, filelists)
 
-        self.assertEqual(entries[0]["titleId"], "0100000000003000")
-        self.assertEqual(entries[0]["name"], "Master Collection")
-        self.assertEqual(report["methods"]["catalog_title_id"], 1)
-        self.assertEqual(report["ambiguous"], 0)
+        self.assertEqual(
+            {entry["titleId"] for entry in entries},
+            {"0100000000001000", "0100000000002000"},
+        )
+        self.assertEqual(report["methods"]["catalog_title_id"], 0)
 
-    def test_named_filelist_title_id_picks_collection_game(self):
+    def test_named_filelist_title_id_splits_collection(self):
         row = game(
             "Metal Gear Solid: Master Collection Edition, Vol. 1 [NSZ]",
             "E", 5,
@@ -202,8 +226,8 @@ class BuildIndexTests(unittest.TestCase):
 
         entries, report = build_index.build_index([row], titledb, {}, filelists)
 
-        self.assertEqual(entries[0]["titleId"], "0100000000001000")
-        self.assertEqual(report["methods"]["file_title_id_named"], 1)
+        self.assertEqual(len(entries), 4)
+        self.assertEqual(report["methods"]["file_title_id_split"], 4)
         self.assertEqual(report["ambiguous"], 0)
 
     def test_manual_topic_override_wins(self):
@@ -719,6 +743,26 @@ class BuildIndexTests(unittest.TestCase):
         build_index.validate_entries(entry([]))
         build_index.validate_entries(entry(["split", "coop", "lan", "online"]))
 
+    def test_output_validation_allows_shared_infohash(self):
+        icon = build_index.ESHOP_IMAGE_PREFIX + "i/icon.jpg"
+        entries = [
+            {
+                "infoHash": "A" * 40,
+                "titleId": "0100000000001000",
+                "name": "Galaxy",
+                "iconUrl": icon,
+            },
+            {
+                "infoHash": "A" * 40,
+                "titleId": "0100000000002000",
+                "name": "Galaxy 2",
+                "iconUrl": icon,
+            },
+        ]
+        build_index.validate_entries(entries)
+        with self.assertRaises(ValueError):
+            build_index.validate_entries(entries + [dict(entries[0])])
+
     def test_output_validation_accepts_nintendo_store_icon(self):
         entries = [
             {
@@ -779,15 +823,16 @@ class BuildIndexTests(unittest.TestCase):
             ),
             131072,
         )
-        # Case-insensitive tag, larger value wins regardless of order.
+        # Combo dump: the other title's higher [vN] must not win.
         self.assertEqual(
             build_index._latest_title_version_from_files(
                 [
-                    {"path": "Game [0100000000001800][V196608].nsp"},
-                    {"path": "Game [0100000000001000][v65536].nsp"},
-                ]
+                    {"path": "Galaxy [0100000000001000][v131072].nsp"},
+                    {"path": "Galaxy 2 [0100000000002000][v327680].nsp"},
+                ],
+                "0100000000001000",
             ),
-            196608,
+            131072,
         )
 
     def test_metadata_record_carries_latest_version(self):

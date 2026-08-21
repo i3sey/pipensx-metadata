@@ -874,7 +874,9 @@ def _metadata_record(info_hash: str, source_title: str, method: str,
 _VERSION_TAG = re.compile(r"\[v(\d+)\]", re.IGNORECASE)
 
 
-def _latest_title_version_from_files(files: Any) -> int | None:
+def _latest_title_version_from_files(
+    files: Any, title_id: str | None = None,
+) -> int | None:
     """Max [vN] tag across a release's file paths, or None when no file
     carries one.
 
@@ -883,12 +885,19 @@ def _latest_title_version_from_files(files: Any) -> int | None:
     ("Game [0100...6800][v131072].nsp"). The client compares this against
     the installed Patch content-meta version, so the tag must come from the
     same numbering — CNMT title version, not a display string.
+
+    When title_id is set, only files whose path maps onto that base
+    application id (…000 / patch …800 / that title's DLC) contribute, so a
+    combo dump cannot leak the other game's patch version.
     """
+    wanted = base_title_id(title_id) if title_id else None
     best: int | None = None
     if isinstance(files, list):
         for item in files:
             path = item.get("path") if isinstance(item, dict) else None
             if not isinstance(path, str):
+                continue
+            if wanted is not None and wanted not in title_ids_from_text(path):
                 continue
             for match in _VERSION_TAG.finditer(path):
                 try:
@@ -941,55 +950,6 @@ def _title_id_candidates_from_files(
     )
 
 
-def _select_largest_title_id(candidates: list[dict[str, Any]]) -> str | None:
-    if len(candidates) == 1:
-        return str(candidates[0]["titleId"])
-    if not candidates or any(
-        candidate.get("bytes") is None for candidate in candidates
-    ):
-        return None
-    ordered = sorted(candidates, key=lambda item: int(item["bytes"]), reverse=True)
-    if int(ordered[0]["bytes"]) > int(ordered[1]["bytes"]):
-        return str(ordered[0]["titleId"])
-    return None
-
-
-def _is_extra_content(name: str) -> bool:
-    normalized = normalize_title(name)
-    tokens = set(normalized.split())
-    if "bonus" in tokens or "preorder" in tokens:
-        return True
-    if "pre order" in normalized or "language pack" in normalized:
-        return True
-    return False
-
-
-def _select_named_title_id(
-    candidates: list[dict[str, Any]], source_title: str,
-) -> str | None:
-    query = normalize_title(source_title)
-    if not query or len(candidates) < 2:
-        return None
-    scored: list[tuple[float, str]] = []
-    for candidate in candidates:
-        name = str(candidate.get("name", ""))
-        if _is_extra_content(name):
-            continue
-        score = difflib.SequenceMatcher(
-            None, query, normalize_title(name),
-        ).ratio()
-        scored.append((score, str(candidate["titleId"])))
-    if not scored:
-        return None
-    scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
-    best, title_id = scored[0]
-    if best < 0.5:
-        return None
-    if len(scored) > 1 and best - scored[1][0] < 0.02:
-        return None
-    return title_id
-
-
 def build_index(
     langegen: list[dict[str, Any]],
     titledb: dict[str, Any],
@@ -1030,6 +990,7 @@ def build_index(
     methods = {
         "override": 0,
         "file_title_id_largest": 0,
+        "file_title_id_split": 0,
         "file_title_id_named": 0,
         "title_id": 0,
         "catalog_title_id": 0,
@@ -1055,6 +1016,7 @@ def build_index(
         selected: str | None = None
         method: str | None = None
         latest_version: int | None = None
+        cached_files: Any = None
 
         override = str(overrides.get(topic_id, "")).upper()
         if override in by_id:
@@ -1065,12 +1027,10 @@ def build_index(
         )
         if (isinstance(cached_filelist, dict) and
                 cached_filelist.get("infoHash") == info_hash):
-            latest_version = _latest_title_version_from_files(
-                cached_filelist.get("files")
-            )
+            cached_files = cached_filelist.get("files")
             if selected is None:
                 candidates = _title_id_candidates_from_files(
-                    cached_filelist.get("files"), by_id
+                    cached_files, by_id
                 )
                 if candidates:
                     row = {
@@ -1079,26 +1039,20 @@ def build_index(
                         "candidates": candidates,
                     }
                     file_title_id_candidates.append(row)
-                    selected = _select_largest_title_id(candidates)
-                    if selected:
-                        method = "file_title_id_largest"
-                    else:
-                        catalog_id = catalog_base_title_id(game)
-                        # Collection dumps list the bundled games, not the
-                        # wrapper title id Langegen tagged.
-                        if catalog_id in by_id:
-                            selected, method = catalog_id, "catalog_title_id"
-                        else:
-                            named = _select_named_title_id(candidates, title)
-                            if named:
-                                selected, method = named, "file_title_id_named"
-                            else:
-                                ambiguous_rows.append({
-                                    **row,
-                                    "stage": "file_title_id",
-                                })
-                                multi_title_id_rows.append(row)
-                                continue
+                    if len(candidates) > 1:
+                        for candidate in candidates:
+                            title_id = str(candidate["titleId"])
+                            methods["file_title_id_split"] += 1
+                            entries.append(_metadata_record(
+                                info_hash, title, "file_title_id_split",
+                                by_id[title_id],
+                                _latest_title_version_from_files(
+                                    cached_files, title_id
+                                ),
+                            ))
+                        continue
+                    selected = str(candidates[0]["titleId"])
+                    method = "file_title_id_largest"
 
         if selected is None:
             text = title + "\n" + str(game.get("description", ""))
@@ -1140,6 +1094,10 @@ def build_index(
         if selected is None or method is None:
             unmatched.append({"topicId": topic_id, "title": title})
             continue
+        if cached_files is not None:
+            latest_version = _latest_title_version_from_files(
+                cached_files, selected
+            )
         methods[method] += 1
         if algolia_hit:
             record = {
@@ -1155,7 +1113,7 @@ def build_index(
                 info_hash, title, method, by_id[selected], latest_version,
             ))
 
-    entries.sort(key=lambda item: item["infoHash"])
+    entries.sort(key=lambda item: (item["infoHash"], item["titleId"]))
     fuzzy_suggestions: list[dict[str, Any]] = []
     for row in unmatched:
         normalized = normalize_title(row["title"])
@@ -1242,7 +1200,9 @@ def build_index(
         "fileListFetchLimitReached": stats.get(
             "fileListFetchLimitReached", False
         ),
-        "fileTitleIdMatches": methods["file_title_id_largest"],
+        "fileTitleIdMatches": (
+            methods["file_title_id_largest"] + methods["file_title_id_split"]
+        ),
         "multiTitleIdRows": multi_title_id_rows,
         "fileTitleIdCandidates": file_title_id_candidates,
         "ambiguousRows": ambiguous_rows,
@@ -1261,7 +1221,7 @@ def _encode_index(entries: list[dict[str, Any]]) -> bytes:
 def validate_entries(entries: list[dict[str, Any]]) -> None:
     if not 0 < len(entries) <= 20000:
         raise ValueError("metadata index must contain 1..20000 entries")
-    hashes: set[str] = set()
+    seen: set[tuple[str, str]] = set()
     for index, item in enumerate(entries):
         info_hash = item.get("infoHash")
         title_id = item.get("titleId")
@@ -1269,9 +1229,14 @@ def validate_entries(entries: list[dict[str, Any]]) -> None:
         icon_url = item.get("iconUrl")
         if not isinstance(info_hash, str) or not INFO_HASH_RE.fullmatch(info_hash):
             raise ValueError(f"entry {index} has an invalid infoHash")
-        if info_hash in hashes:
-            raise ValueError(f"entry {index} duplicates infoHash {info_hash}")
-        hashes.add(info_hash)
+        if not isinstance(title_id, str):
+            raise ValueError(f"entry {index} has an invalid base titleId")
+        key = (info_hash, title_id.upper())
+        if key in seen:
+            raise ValueError(
+                f"entry {index} duplicates infoHash {info_hash} titleId {title_id}"
+            )
+        seen.add(key)
         if not is_base_title_id(title_id):
             raise ValueError(f"entry {index} has an invalid base titleId")
         if not isinstance(name, str) or not name:
