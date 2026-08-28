@@ -2476,7 +2476,7 @@
    "platformSource": "none"
   },
   "01000D3013E8C000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 130748,
    "igdbName": "SpongeBob: Krusty Cook-Off",
    "modes": [],
@@ -3137,7 +3137,7 @@
    "platformSource": "none"
   },
   "0100103011894000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 150502,
    "igdbName": "Naught",
    "modes": [],
@@ -3988,6 +3988,13 @@
    "modes": [],
    "platformSource": "none"
   },
+  "010013E0230B6000": {
+   "fetchedAt": "2026-08-28T22:20:01Z",
+   "igdbId": 305076,
+   "igdbName": "Ila: A Frosty Glide",
+   "modes": [],
+   "platformSource": "none"
+  },
   "010013F009B88000": {
    "fetchedAt": "2026-07-25T15:41:53Z",
    "igdbId": 80010,
@@ -4586,7 +4593,7 @@
    "platformSource": "agnostic"
   },
   "010016D02485C000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 325283,
    "igdbName": "Blippo+",
    "modes": [],
@@ -5358,7 +5365,7 @@
    "platformSource": "none"
   },
   "01001AC00ED72000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 196874,
    "igdbName": "If My Heart Had Wings",
    "modes": [],
@@ -6843,7 +6850,7 @@
    "platformSource": "none"
   },
   "010022801242C000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 136255,
    "igdbName": "KukkoroDays",
    "modes": [],
@@ -9628,7 +9635,7 @@
    "platformSource": "none"
   },
   "01003030161DC000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 175809,
    "igdbName": "Monomals",
    "modes": [],
@@ -11829,7 +11836,7 @@
    "platformSource": "none"
   },
   "01003AC017294000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 278476,
    "igdbName": "Valis: The Fantasm Soldier",
    "modes": [],
@@ -13052,7 +13059,7 @@
    "platformSource": "none"
   },
   "0100416004C00000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 76217,
    "igdbName": "Doom",
    "modes": [],
@@ -14336,7 +14343,7 @@
    "platformSource": "none"
   },
   "010047B010260000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 95073,
    "igdbName": "Space Pioneer",
    "modes": [],
@@ -14566,7 +14573,7 @@
    "platformSource": "none"
   },
   "010048F0195E8000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 261085,
    "igdbName": "Quake II",
    "modes": [],
@@ -18153,7 +18160,7 @@
    "platformSource": "none"
   },
   "01005B301F29E000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 295314,
    "igdbName": "Castaway",
    "modes": [],
@@ -18687,7 +18694,7 @@
    "platformSource": "agnostic"
   },
   "01005E7013476000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 197833,
    "igdbName": "Mad Father",
    "modes": [],
@@ -20257,7 +20264,7 @@
    "platformSource": "none"
   },
   "01006560184E6000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 239392,
    "igdbName": "Mortal Kombat 1",
    "modes": [],
@@ -21355,6 +21362,13 @@
    "fetchedAt": "2026-08-15T10:08:01Z",
    "igdbId": 110421,
    "igdbName": "Art Sqool",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "01006AB0223B6000": {
+   "fetchedAt": "2026-08-28T22:20:00Z",
+   "igdbId": 132198,
+   "igdbName": "Karma City Police",
    "modes": [],
    "platformSource": "none"
   },
@@ -25202,7 +25216,7 @@
    "platformSource": "none"
   },
   "01007D901FF7C000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 304131,
    "igdbName": "Riviera: The Promised Land",
    "modes": [],
@@ -28905,7 +28919,7 @@
    "platformSource": "any"
   },
   "0100901014412000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 147675,
    "igdbName": "From Shadows",
    "modes": [],
@@ -31777,6 +31791,13 @@
    "fetchedAt": "2026-07-25T15:41:12Z",
    "igdbId": 28794,
    "igdbName": "Ancestors Legacy",
+   "modes": [],
+   "platformSource": "none"
+  },
+  "01009EF0291C6000": {
+   "fetchedAt": "2026-08-28T22:20:00Z",
+   "igdbId": 380081,
+   "igdbName": "Tome of the Damned",
    "modes": [],
    "platformSource": "none"
   },
@@ -36002,7 +36023,7 @@
    "platformSource": "agnostic"
   },
   "0100B410040F2000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 194216,
    "igdbName": "Dead Synchronicity: Tomorrow Comes Today",
    "modes": [],
@@ -40945,7 +40966,7 @@
    "platformSource": "none"
   },
   "0100CD10266C2000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 112854,
    "igdbName": "Firework",
    "modes": [],
@@ -43063,7 +43084,7 @@
    "platformSource": "none"
   },
   "0100D7800E9E0000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 119391,
    "igdbName": "Trials of Mana",
    "modes": [],
@@ -48354,7 +48375,7 @@
    "platformSource": "none"
   },
   "0100F25022A30000": {
-   "fetchedAt": "2026-08-28T11:23:34Z",
+   "fetchedAt": "2026-08-28T22:20:00Z",
    "igdbId": 363998,
    "igdbName": "Ys Memoire: Revelations in Celceta",
    "modes": [],
@@ -55715,6 +55736,10 @@
    "checkedAt": "2026-08-21T18:56:03Z",
    "reason": "none"
   },
+  "010089902355A000": {
+   "checkedAt": "2026-08-28T22:19:59Z",
+   "reason": "none"
+  },
   "010089B00D09C000": {
    "checkedAt": "2026-07-25T15:41:10Z",
    "reason": "none"
@@ -56221,6 +56246,10 @@
   },
   "0100970023160000": {
    "checkedAt": "2026-07-25T15:41:10Z",
+   "reason": "none"
+  },
+  "01009720213B0000": {
+   "checkedAt": "2026-08-28T22:19:59Z",
    "reason": "none"
   },
   "0100974026B32000": {
